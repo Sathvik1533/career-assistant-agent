@@ -14,7 +14,7 @@ import os
 from typing import Dict, Any
 
 # Modern LangChain imports - separate paths
-from langchain.agents import AgentExecutor
+from langchain.agents import AgentExecutor, create_react_agent
 from langchain.agents.tool_calling_agent.base import create_tool_calling_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
