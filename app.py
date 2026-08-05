@@ -1,11 +1,14 @@
 """
-FastAPI Web Server for Career Assistant Agent
+FastAPI Web Server with LangServe for Career Assistant Agent
 
 Endpoints:
-- GET  /           - Home
-- GET  /health     - Health check  
-- POST /analyze    - Upload resume and get analysis
-- GET  /docs       - API documentation
+- GET  /                    - Home
+- GET  /health              - Health check  
+- POST /analyze             - Upload resume and get analysis (REST API)
+- POST /agent/invoke        - LangServe invoke endpoint
+- POST /agent/stream        - LangServe streaming endpoint
+- GET  /agent/playground    - LangServe interactive playground
+- GET  /docs                - API documentation
 """
 
 import os
@@ -13,9 +16,9 @@ import tempfile
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
-from langchain.agents import AgentExecutor
+from langserve import add_routes
 
-from agent import run_career_analysis
+from agent import run_career_analysis, create_career_agent
 from utils import extract_text_from_pdf
 
 # Load environment variables
@@ -24,18 +27,44 @@ load_dotenv()
 # Create FastAPI app
 app = FastAPI(
     title="Career Assistant Agent API",
-    version="1.0.0",
-    description="LangGraph agent with 4 tools for career assistance using Gemma 4 31B"
+    version="2.0.0",
+    description="LangChain agent with 4 tools for career assistance using Gemma 4 31B"
 )
 
+
+# =============================================================================
+# LANGSERVE ROUTES - Interactive Playground
+# =============================================================================
+
+# Create the agent for LangServe
+try:
+    career_agent = create_career_agent()
+    
+    # Add LangServe routes - this gives us /agent/playground
+    add_routes(
+        app,
+        career_agent,
+        path="/agent",
+        enabled_endpoints=["invoke", "stream", "playground"],
+    )
+    print("✅ LangServe routes added at /agent")
+except Exception as e:
+    print(f"⚠️  Warning: Could not initialize agent for LangServe: {e}")
+    print("   (Make sure GOOGLE_API_KEY is set)")
+
+
+# =============================================================================
+# REST API ENDPOINTS
+# =============================================================================
 
 @app.get("/")
 def home():
     """Home endpoint with API information"""
     return {
         "message": "Career Assistant Agent API",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "model": "Gemma 4 31B (models/gemma-4-31b-it)",
+        "framework": "LangChain (NO LangGraph)",
         "tools": [
             "Job Search",
             "Skill Gap Analysis",
@@ -43,7 +72,10 @@ def home():
             "GitHub Checker"
         ],
         "endpoints": {
-            "analyze": "/analyze (POST)",
+            "langserve_playground": "/agent/playground (Interactive UI)",
+            "langserve_invoke": "/agent/invoke (POST)",
+            "langserve_stream": "/agent/stream (POST)",
+            "rest_analyze": "/analyze (POST - Upload resume)",
             "health": "/health (GET)",
             "docs": "/docs (GET)"
         },
@@ -57,7 +89,8 @@ def health_check():
     api_key_set = bool(os.getenv("GOOGLE_API_KEY"))
     return {
         "status": "healthy",
-        "api_key_configured": api_key_set
+        "api_key_configured": api_key_set,
+        "langserve_enabled": True
     }
 
 
@@ -68,9 +101,9 @@ async def analyze_career(
     github_username: str = Form(..., description="GitHub username to analyze")
 ):
     """
-    Analyze career prospects with resume, target role, and GitHub profile.
+    REST API: Analyze career prospects with resume, target role, and GitHub profile.
     
-    Returns comprehensive report with:
+    This endpoint accepts file upload and returns comprehensive report with:
     - Job opportunities
     - Skill gap analysis
     - Project recommendations

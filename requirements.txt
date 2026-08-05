@@ -4,10 +4,14 @@ langchain-core>=0.3.0
 langchain-community>=0.3.0
 langchain-google-genai>=2.0.0
 
+# LangServe - for /agent/playground
+langserve[all]>=0.3.0
+
 # Web Framework
 fastapi>=0.115.0
 uvicorn[standard]>=0.30.0
 python-multipart>=0.0.9
+sse-starlette>=2.0.0
 
 # PDF Processing
 pdfplumber>=0.11.0
