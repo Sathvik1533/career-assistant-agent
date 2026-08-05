@@ -17,6 +17,7 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from langserve import add_routes
+from langchain.agents import AgentExecuter
 
 from agent import run_career_analysis, create_career_agent
 from utils import extract_text_from_pdf
