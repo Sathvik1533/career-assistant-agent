@@ -7,17 +7,15 @@ Single agent with 4 tools that:
 3. Suggests portfolio projects
 4. Checks GitHub profile
 
-Uses LangChain's AgentExecutor for orchestration.
+Uses LangChain 0.3.x with tool-calling via ChatGoogleGenerativeAI
 """
 
 import os
 from typing import Dict, Any
-
-# Modern LangChain imports - separate paths
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain.agents.tool_calling_agent.base import create_tool_calling_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
 
 from tools import (
     job_search_tool,
@@ -25,149 +23,118 @@ from tools import (
     project_idea_generator_tool,
     github_checker_tool
 )
-from utils import validate_tool_outputs, synthesize_report
 
-
-# Initialize LLM - Gemma 4 31B
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-
-llm = ChatGoogleGenerativeAI(
-    model="models/gemma-4-31b-it",
-    google_api_key=GOOGLE_API_KEY,
-    temperature=0.7
-)
-
-# Define all 4 tools
-tools = [
-    job_search_tool,
-    skill_gap_analysis_tool,
-    project_idea_generator_tool,
-    github_checker_tool
-]
+from utils import extract_text_from_pdf, validate_inputs, synthesize_report
 
 
 def create_career_agent():
-    """Create the LangChain agent with all 4 tools"""
+    """
+    Create a LangChain career assistant agent using tool calling.
+    Compatible with LangChain 0.3.x and LangServe.
+    """
+    # Get API key
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise ValueError("GOOGLE_API_KEY not found in environment")
     
-    # Create agent prompt
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", """You are a career assistant agent with 4 tools to help job seekers:
-
-1. job_search_tool - Find job openings matching a target role
-2. skill_gap_analysis_tool - Analyze resume vs role requirements  
-3. project_idea_generator_tool - Suggest portfolio projects
-4. github_checker_tool - Check GitHub profile and repos
-
-Your task: Use ALL 4 tools to provide complete career guidance.
-
-Process:
-1. First, search for jobs using the target role
-2. Then, analyze skill gaps from the resume
-3. Next, generate project ideas based on skill gaps
-4. Finally, check the candidate's GitHub profile
-
-Always use all 4 tools in order to provide comprehensive analysis."""),
-        ("human", "{input}"),
-        ("placeholder", "{agent_scratchpad}"),
-    ])
-    
-    # Create agent with modern import
-    agent = create_tool_calling_agent(llm, tools, prompt)
-    
-    # Create executor
-    agent_executor = AgentExecutor(
-        agent=agent,
-        tools=tools,
-        verbose=True,
-        handle_parsing_errors=True,
-        max_iterations=10
+    # Initialize LLM with tool binding
+    llm = ChatGoogleGenerativeAI(
+        model="models/gemma-4-31b-it",
+        google_api_key=api_key,
+        temperature=0.1,
     )
     
-    return agent_executor
+    # Bind tools to LLM
+    tools = [
+        job_search_tool,
+        skill_gap_analysis_tool,
+        project_idea_generator_tool,
+        github_checker_tool
+    ]
+    
+    llm_with_tools = llm.bind_tools(tools)
+    
+    # Create prompt
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", """You are a Career Assistant Agent helping candidates improve their job prospects.
+
+You have access to 4 tools:
+1. job_search_tool - Find relevant job openings
+2. skill_gap_analysis_tool - Analyze skill gaps
+3. project_idea_generator_tool - Suggest portfolio projects
+4. github_checker_tool - Check GitHub profile
+
+Given a user's resume, target role, and GitHub username:
+1. Use ALL 4 tools to gather information
+2. Synthesize the results into a comprehensive career report
+3. Provide actionable recommendations
+
+Be thorough and use all available tools."""),
+        ("human", "{input}")
+    ])
+    
+    # Build chain
+    chain = prompt | llm_with_tools | StrOutputParser()
+    
+    return chain
 
 
 def run_career_analysis(resume_text: str, target_role: str, github_username: str) -> Dict[str, Any]:
     """
-    Run the complete career analysis using LangChain agent.
+    Run complete career analysis with resume, target role, and GitHub profile.
     
-    Args:
-        resume_text: Text extracted from resume PDF
-        target_role: Target job role (e.g., "Software Engineer")
-        github_username: GitHub username to analyze
-    
-    Returns:
-        Complete analysis report as dictionary
+    Returns comprehensive JSON report with:
+    - Job opportunities
+    - Skill gap analysis
+    - Project recommendations
+    - GitHub portfolio summary
     """
-    print("\n" + "="*80)
-    print("🚀 STARTING CAREER ANALYSIS (LangChain Agent)")
-    print("="*80)
+    # Validate inputs
+    validate_inputs(resume_text, target_role, github_username)
     
     # Create agent
-    agent_executor = create_career_agent()
+    agent = create_career_agent()
     
     # Prepare input
-    input_text = f"""Analyze this candidate's career prospects:
+    user_input = f"""
+Please analyze this candidate's career prospects:
 
 Target Role: {target_role}
 GitHub Username: {github_username}
-Resume Text: {resume_text[:500]}... (truncated for brevity)
 
-Please use ALL 4 tools to:
-1. Find job opportunities for {target_role}
-2. Analyze skill gaps from the resume
+Resume:
+{resume_text[:2000]}...
+
+Please:
+1. Search for {target_role} job openings
+2. Analyze skill gaps between resume and role
 3. Suggest portfolio projects to close gaps
-4. Check GitHub profile for {github_username}
+4. Review GitHub profile @{github_username}
 
-Provide comprehensive career guidance."""
+Provide a comprehensive career report.
+"""
     
+    # Run analysis
     try:
-        print("\n🤖 Agent starting tool execution...")
+        result = agent.invoke({"input": user_input})
         
-        # Run agent
-        result = agent_executor.invoke({"input": input_text})
-        
-        print("\n✅ Agent execution complete!")
-        
-        # Extract tool outputs from agent result
-        # Note: We'll collect outputs as agent executes
-        tool_outputs = {
-            "job_search": "Agent executed job search",
-            "skill_gap_analysis": "Agent executed skill gap analysis",
-            "project_ideas": "Agent executed project ideas",
-            "github_check": "Agent executed GitHub check"
-        }
-        
-        # Validate outputs
-        print("\n✅ Validating outputs...")
-        validation = validate_tool_outputs(tool_outputs)
-        
-        # Synthesize report
-        print("\n📄 Synthesizing final report...")
+        # Synthesize into structured report
         report = synthesize_report(
-            outputs=tool_outputs,
-            resume_text=resume_text,
+            result=result,
             target_role=target_role,
             github_username=github_username
         )
         
-        # Add agent output to report
-        report["agent_response"] = result.get("output", "")
-        report["validation"] = validation
-        
-        print("  Report complete!")
-        
         return report
-    
+        
     except Exception as e:
-        print(f"\n❌ Error during analysis: {e}")
         return {
-            "error": str(e),
-            "status": "failed",
-            "resume_text_length": len(resume_text),
+            "status": "error",
+            "message": f"Analysis failed: {str(e)}",
             "target_role": target_role,
             "github_username": github_username
         }
 
 
-# Export main function
-__all__ = ["run_career_analysis", "create_career_agent"]
+if __name__ == "__main__":
+    print("✅ Career Agent module loaded (LangChain 0.3.x compatible)")
