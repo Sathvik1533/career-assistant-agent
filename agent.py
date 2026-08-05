@@ -12,7 +12,10 @@ Uses LangChain's AgentExecutor for orchestration.
 
 import os
 from typing import Dict, Any
-from langchain.agents import AgentExecutor, create_tool_calling_agent
+
+# Modern LangChain imports - separate paths
+from langchain.agents import AgentExecutor
+from langchain.agents.tool_calling_agent.base import create_tool_calling_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -68,7 +71,7 @@ Always use all 4 tools in order to provide comprehensive analysis."""),
         ("placeholder", "{agent_scratchpad}"),
     ])
     
-    # Create agent
+    # Create agent with modern import
     agent = create_tool_calling_agent(llm, tools, prompt)
     
     # Create executor
