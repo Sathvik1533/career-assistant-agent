@@ -1,16 +1,24 @@
 """
-Simple LangChain Career Assistant - LangServe Compatible
+LangChain Career Assistant - LangServe Compatible with Input Schema
 """
 
 import os
+from typing import Dict, Any
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import RunnableLambda
+from pydantic import BaseModel, Field
+
+
+class CareerInput(BaseModel):
+    """Input schema for career assistant"""
+    query: str = Field(description="Career analysis query with resume info, target role, and GitHub username")
+
 
 def create_career_agent():
     """
-    Create a simple career assistant chain compatible with LangServe.
+    Create a career assistant chain with proper input schema for LangServe.
     """
     # Get API key
     api_key = os.getenv("GOOGLE_API_KEY")
@@ -19,7 +27,7 @@ def create_career_agent():
     
     # Initialize LLM
     llm = ChatGoogleGenerativeAI(
-        model="models/gemini-1.5-flash",  # Using a model that definitely exists
+        model="models/gemini-1.5-flash",
         google_api_key=api_key,
         temperature=0.7,
     )
@@ -28,49 +36,39 @@ def create_career_agent():
     prompt = ChatPromptTemplate.from_messages([
         ("system", """You are a Career Assistant helping candidates with their job search.
 
-Based on the user's input about their resume, target role, and GitHub username, provide:
+Based on the user's input, provide:
+1. **Job Search Tips**: Relevant jobs and keywords
+2. **Skill Gap Analysis**: Skills they need to develop
+3. **Project Ideas**: 2-3 portfolio projects to build
+4. **GitHub Profile Tips**: How to improve their presence
 
-1. **Job Search Tips**: Suggest where to find relevant jobs and what keywords to use
-2. **Skill Gap Analysis**: Based on their experience, identify likely skill gaps for their target role
-3. **Project Ideas**: Suggest 2-3 portfolio projects they could build
-4. **GitHub Profile Review**: Give tips on how to improve their GitHub presence
-
-Be specific, actionable, and encouraging."""),
-        ("human", "{input}")
+Be specific and actionable."""),
+        ("human", "{query}")
     ])
     
     # Build chain
-    chain = (
-        {"input": RunnablePassthrough()}
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
+    chain = prompt | llm | StrOutputParser()
+    
+    # Add input schema
+    chain = chain.with_types(input_type=CareerInput)
     
     return chain
 
 
-def run_career_analysis(resume_text: str, target_role: str, github_username: str):
+def run_career_analysis(resume_text: str, target_role: str, github_username: str) -> Dict[str, Any]:
     """Run career analysis - for REST API endpoint"""
     agent = create_career_agent()
     
-    user_input = f"""
-Please analyze my career prospects:
-
+    user_query = f"""
 Target Role: {target_role}
-GitHub Username: {github_username}
+GitHub: {github_username}
 
-My Background:
-{resume_text[:1000]}
+Resume: {resume_text[:1000]}
 
-Please provide:
-1. Job search strategy
-2. Skill gap analysis
-3. Portfolio project ideas
-4. GitHub profile tips
+Please analyze and provide job search tips, skill gaps, project ideas, and GitHub tips.
 """
     
-    result = agent.invoke(user_input)
+    result = agent.invoke({"query": user_query})
     
     return {
         "status": "success",
@@ -81,4 +79,4 @@ Please provide:
 
 
 if __name__ == "__main__":
-    print("✅ Simple Career Agent loaded (LangServe compatible)")
+    print("✅ Career Agent with input schema loaded")
