@@ -114,7 +114,12 @@ career-assistant-agent/
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `GROQ_API_KEY` | Yes | Groq API key for LLM access |
-| `GITHUB_TOKEN` | No | GitHub PAT for higher API rate limits |
+| `GITHUB_TOKEN` | No | GitHub Personal Access Token for higher API rate limits (60/hour → 5,000/hour) |
+
+> 🔒 **Security Note for `GITHUB_TOKEN`:** You can generate a classic token with **zero permissions/scopes checked**.  
+> Since the `github_profile_analyzer` tool only reads public repository data, a completely blank token is  
+> all that is required to safely upgrade your API limit from 60 to 5,000 requests/hour. Your private code  
+> and account credentials remain entirely secure and inaccessible.
 
 ## Deployment
 
@@ -126,6 +131,12 @@ career-assistant-agent/
 4. Set environment variables:
    - `GROQ_API_KEY`: Your Groq API key
    - `GITHUB_TOKEN`: (Optional) GitHub Personal Access Token
+     
+     > 🔒 **Security Note:** You can generate a classic token with **zero permissions/scopes checked**.
+     > Since the `github_profile_analyzer` tool only reads public repository data, a completely blank token is
+     > all that is required to safely upgrade your API limit from 60 to 5,000 requests/hour. Your private code
+     > and account credentials remain entirely secure and inaccessible.
+
 5. Deploy
 
 Build and start commands are configured in `render.yaml`.
