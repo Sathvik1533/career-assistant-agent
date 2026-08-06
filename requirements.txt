@@ -10,3 +10,4 @@ PyPDF2
 python-dotenv
 requests
 pydantic
+pdfplumber
