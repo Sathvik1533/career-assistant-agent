@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Assistant Agent | AI-Powered Career Guidance</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">🤖</span>
+                    <span class="logo-text">Career Assistant</span>
+                </div>
+                <nav class="nav">
+                    <a href="#features" class="nav-link">Features</a>
+                    <a href="#how-it-works" class="nav-link">How It Works</a>
+                    <a href="https://github.com/Sathvik1533/career-assistant-agent" target="_blank" class="nav-link">GitHub</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="badge">
+                    <span class="badge-icon">⚡</span>
+                    Powered by Groq Llama 3.3 70B
+                </div>
+                <h1 class="hero-title">
+                    AI-Powered Career<br>
+                    <span class="gradient-text">Guidance Assistant</span>
+                </h1>
+                <p class="hero-description">
+                    Get personalized job search strategies, skill gap analysis, project ideas,
+                    and GitHub profile optimization—all powered by AI.
+                </p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary" onclick="scrollToForm()">
+                        Get Started
+                        <span class="btn-icon">→</span>
+                    </button>
+                    <a href="https://career-assistant-agent-bet6.onrender.com/docs" target="_blank" class="btn btn-secondary">
+                        View API Docs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">What You Get</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3 class="feature-title">Job Search Strategy</h3>
+                    <p class="feature-description">
+                        Personalized job search strategies tailored to your target role and experience level.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">Skill Gap Analysis</h3>
+                    <p class="feature-description">
+                        Identify what skills you need to learn to reach your career goals faster.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💡</div>
+                    <h3 class="feature-title">Project Ideas</h3>
+                    <p class="feature-description">
+                        Get practical project recommendations to build an impressive portfolio.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🐙</div>
+                    <h3 class="feature-title">GitHub Review</h3>
+                    <p class="feature-description">
+                        Comprehensive analysis of your GitHub profile with optimization tips.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">Upload Resume</h3>
+                    <p class="step-description">Upload your resume in PDF format</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">Provide Details</h3>
+                    <p class="step-description">Enter target role and GitHub username</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">AI Analysis</h3>
+                    <p class="step-description">Our AI agent analyzes your profile</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3 class="step-title">Get Report</h3>
+                    <p class="step-description">Receive comprehensive career guidance</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Form Section -->
+    <section id="analyzer-form" class="analyzer-form">
+        <div class="container">
+            <div class="form-wrapper">
+                <h2 class="form-title">Analyze Your Career Path</h2>
+                <p class="form-subtitle">Fill in the details below to get your personalized career report</p>
+                
+                <form id="careerForm" class="form">
+                    <div class="form-group">
+                        <label for="resume" class="form-label">
+                            Resume (PDF)
+                            <span class="required">*</span>
+                        </label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="resume" name="resume" accept=".pdf" required class="file-input">
+                            <label for="resume" class="file-input-label">
+                                <span class="file-icon">📄</span>
+                                <span class="file-text">Choose PDF file</span>
+                            </label>
+                            <span class="file-name" id="fileName">No file chosen</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="targetRole" class="form-label">
+                            Target Job Role
+                            <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="targetRole" 
+                            name="target_role" 
+                            placeholder="e.g., Software Engineer, Data Scientist" 
+                            required 
+                            class="form-input"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="githubUsername" class="form-label">
+                            GitHub Username
+                            <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="githubUsername" 
+                            name="github_username" 
+                            placeholder="e.g., Sathvik1533" 
+                            required 
+                            class="form-input"
+                        >
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-submit" id="submitBtn">
+                        <span id="submitText">Analyze Career Path</span>
+                        <span id="submitLoader" class="loader hidden"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    <section id="results" class="results hidden">
+        <div class="container">
+            <div class="results-header">
+                <h2 class="results-title">Your Career Analysis Report</h2>
+                <button class="btn btn-secondary btn-small" onclick="resetForm()">
+                    Analyze Another
+                </button>
+            </div>
+            
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="result-icon">🔍</span>
+                        <h3 class="result-title">Job Search Strategy</h3>
+                    </div>
+                    <div class="result-content" id="jobSearchResult">
+                        <div class="skeleton"></div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="result-icon">📊</span>
+                        <h3 class="result-title">Skill Gap Analysis</h3>
+                    </div>
+                    <div class="result-content" id="skillGapResult">
+                        <div class="skeleton"></div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="result-icon">💡</span>
+                        <h3 class="result-title">Project Ideas</h3>
+                    </div>
+                    <div class="result-content" id="projectIdeasResult">
+                        <div class="skeleton"></div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="result-icon">🐙</span>
+                        <h3 class="result-title">GitHub Profile Review</h3>
+                    </div>
+                    <div class="result-content" id="githubReviewResult">
+                        <div class="skeleton"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <div class="logo">
+                        <span class="logo-icon">🤖</span>
+                        <span class="logo-text">Career Assistant</span>
+                    </div>
+                    <p class="footer-text">Built with ❤️ using LangChain & Groq</p>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/Sathvik1533/career-assistant-agent" target="_blank" class="footer-link">GitHub</a>
+                    <a href="https://career-assistant-agent-bet6.onrender.com/docs" target="_blank" class="footer-link">API Docs</a>
+                    <a href="https://github.com/Sathvik1533" target="_blank" class="footer-link">@Sathvik1533</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
