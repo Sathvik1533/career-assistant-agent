@@ -1,380 +1,168 @@
-# 🤖 Career Assistant Agent
+# Career Assistant Agent
 
-<div align="center">
+> AI-powered career guidance using LangChain AgentExecutor and Groq Llama 3.3 70B
 
-**AI-powered career guidance using Groq's lightning-fast Llama 3.3 70B**
+[![Live Demo](https://img.shields.io/badge/Live-Demo-green)](https://career-assistant-agent-bet6.onrender.com)
+[![Python](https://img.shields.io/badge/Python-3.9+-blue)](https://www.python.org)
+[![LangChain](https://img.shields.io/badge/LangChain-Agent-orange)](https://www.langchain.com)
+[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-[![Live Demo](https://img.shields.io/badge/🚀_LIVE_DEMO-4CAF50?style=for-the-badge)](https://career-assistant-agent-bet6.onrender.com/docs)
-[![Powered By](https://img.shields.io/badge/POWERED_BY-GROQ-FF6F00?style=for-the-badge&logo=ai)](https://groq.com/)
-[![LangChain](https://img.shields.io/badge/LangChain-🦜-1C3C3C?style=for-the-badge)](https://www.langchain.com/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+## Overview
 
-</div>
+An intelligent career assistant that analyzes resumes, identifies skill gaps, suggests portfolio projects, and reviews GitHub profiles using LangChain's AgentExecutor with 4 specialized tools.
 
----
+## Features
 
-## 🎯 What It Does
+- **Job Search Strategies** - Personalized recommendations for target roles
+- **Skill Gap Analysis** - Identify missing skills and learning paths
+- **Project Idea Generation** - Tailored portfolio project suggestions
+- **GitHub Profile Review** - Profile optimization with REST API integration
+- **AgentExecutor Runtime** - Dynamic tool orchestration by Groq LLM
+- **Custom Frontend** - Clean, minimal web interface
 
-🔍 **Job Search** - Personalized strategies for your target role  
-📊 **Skill Gaps** - Know what to learn next  
-💡 **Projects** - Build your portfolio with tailored ideas  
-🐙 **GitHub** - Optimize your developer profile  
+## Tech Stack
 
----
+| Component | Technology |
+|-----------|------------|
+| LLM | Groq Llama 3.3 70B (temperature: 0.7) |
+| Framework | LangChain AgentExecutor |
+| Backend | FastAPI |
+| Frontend | HTML/CSS/JavaScript |
+| APIs | GitHub REST API |
+| Deployment | Render |
 
-## ✨ Key Features
-
-- **Single Agent Architecture** - Clean, maintainable LangChain implementation
-- **4 Specialized Tools** - Job search, skill analysis, project ideas, GitHub review
-- **Multi-Input Processing** - Upload resume (PDF), specify target role, provide GitHub username
-- **JSON Output** - Structured, comprehensive career report
-- **Production Ready** - Deployed on Render with FastAPI + Swagger UI
-- **Fast Inference** - Powered by Groq's Llama 3.3 70B (temperature: 0.7)
-
----
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
 - Python 3.9+
-- Groq API key → [Get one here](https://console.groq.com/keys) (Free tier available!)
+- Groq API key ([Get free key](https://console.groq.com/keys))
 
 ### Installation
 
 ```bash
-# Clone the repository
+# Clone repository
 git clone https://github.com/Sathvik1533/career-assistant-agent.git
 cd career-assistant-agent
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up environment variables
-echo "GROQ_API_KEY=your_groq_api_key_here" > .env
+# Set environment variable
+export GROQ_API_KEY="your_groq_api_key"
 
-# Run the application
-python app.py
+# Optional: Add GitHub token for higher rate limits (60/hour → 5,000/hour)
+export GITHUB_TOKEN="your_github_token"
+
+# Run server
+python -m uvicorn app:app --host 0.0.0.0 --port 8000
 ```
 
-### 🎮 Try It Now
+Visit `http://localhost:8000` to access the application.
 
-**Live API**: https://career-assistant-agent-bet6.onrender.com
+## API Usage
 
-**Swagger UI**: https://career-assistant-agent-bet6.onrender.com/docs
-
----
-
-## 📡 API Usage
-
-### Endpoint: `/analyze`
-
-**Method**: `POST`  
-**Content-Type**: `multipart/form-data`
-
-**Parameters**:
-- `resume` (file): PDF file of your resume
-- `target_role` (string): Desired job role (e.g., "Software Engineer")
-- `github_username` (string): Your GitHub username
-
-### Example with cURL
+### Analyze Career Profile
 
 ```bash
-curl -X POST "https://career-assistant-agent-bet6.onrender.com/analyze" \
-  -H "accept: application/json" \
+curl -X POST "http://localhost:8000/analyze" \
   -F "resume=@resume.pdf" \
   -F "target_role=Software Engineer" \
-  -F "github_username=Sathvik1533"
+  -F "github_username=yourusername"
 ```
 
-### Example with Python
-
-```python
-import requests
-
-url = "https://career-assistant-agent-bet6.onrender.com/analyze"
-
-files = {'resume': open('resume.pdf', 'rb')}
-data = {
-    'target_role': 'Software Engineer',
-    'github_username': 'Sathvik1533'
-}
-
-response = requests.post(url, files=files, data=data)
-print(response.json())
-```
-
-### Sample Response
+### Response Format
 
 ```json
 {
-  "job_search": "Focus on applying to companies that value LangChain expertise...",
-  "skill_gaps": "Consider learning Docker, Kubernetes, and system design...",
-  "project_ideas": "Build a multi-agent RAG system with tool-calling capabilities...",
-  "github_summary": "Your profile shows strong Python skills with 15 repositories..."
+  "status": "success",
+  "job_search": "Personalized job search strategies...",
+  "skill_gaps": "Skills to develop and resources...",
+  "project_ideas": "2-3 portfolio project ideas...",
+  "github_summary": "GitHub profile analysis and recommendations..."
 }
 ```
 
----
-
-## 🏗️ Architecture
+## Architecture
 
 ```
-┌─────────────────┐
-│  User Input     │
-│  - Resume PDF   │
-│  - Target Role  │
-│  - GitHub ID    │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│   FastAPI       │
-│   (Pydantic)    │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  LangChain      │
-│  AgentExecutor  │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Groq LLM       │
-│  Llama 3.3 70B  │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────────────────────┐
-│         4 Tools                 │
-│  1. Job Search Advisor          │
-│  2. Skill Gap Analyzer          │
-│  3. Project Idea Generator      │
-│  4. GitHub Profile Checker      │
-└────────┬────────────────────────┘
-         │
-         ▼
-┌─────────────────┐
-│  JSON Response  │
-│  (Structured)   │
-└─────────────────┘
+User Input → FastAPI → AgentExecutor → 4 LangChain Tools → Groq LLM + GitHub API → Structured Output
 ```
 
----
+See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design.
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 career-assistant-agent/
-├── app.py                  # FastAPI application & routes
-├── agent.py                # LangChain agent setup
-├── tools.py                # 4 tool implementations
-├── requirements.txt        # Python dependencies
-├── .env.example           # Environment variables template
-├── .gitignore             # Git ignore rules
-└── README.md              # This file
+├── app.py              # FastAPI server
+├── agent.py            # AgentExecutor and tool orchestration
+├── tools.py            # 4 LangChain tools (@tool decorator)
+├── utils.py            # PDF parsing utilities
+├── requirements.txt    # Python dependencies
+├── static/             # Frontend files
+│   ├── index.html
+│   ├── styles.css
+│   └── script.js
+├── ARCHITECTURE.md     # System design documentation
+├── SETUP_GUIDE.md      # Detailed setup instructions
+└── README.md           # This file
 ```
 
----
+## Environment Variables
 
-## 🛠️ Tech Stack
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GROQ_API_KEY` | Yes | Groq API key for LLM access |
+| `GITHUB_TOKEN` | No | GitHub PAT for higher API rate limits |
 
-| Component | Technology |
-|-----------|-----------|
-| **Framework** | FastAPI |
-| **Agent** | LangChain (NO LangGraph) |
-| **LLM** | Groq - Llama 3.3 70B Versatile |
-| **PDF Processing** | PyPDF2, pdfplumber |
-| **API Integration** | GitHub REST API |
-| **Deployment** | Render |
-| **Temperature** | 0.7 (balanced creativity) |
-
----
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Create a `.env` file in the root directory:
-
-```bash
-GROQ_API_KEY=gsk_your_groq_api_key_here
-```
-
-### Temperature Setting
-
-The agent uses `temperature=0.7` for balanced responses:
-- **Lower (0.0-0.3)**: More consistent, deterministic
-- **Medium (0.4-0.7)**: Balanced creativity and accuracy ✅
-- **Higher (0.8-1.0)**: More creative, varied responses
-
----
-
-## 🚀 Deployment
+## Deployment
 
 ### Deploy to Render
 
-1. **Push to GitHub**
+1. Push code to GitHub
+2. Create Web Service on [Render](https://render.com)
+3. Connect GitHub repository
+4. Set environment variables:
+   - `GROQ_API_KEY`: Your Groq API key
+   - `GITHUB_TOKEN`: (Optional) GitHub Personal Access Token
+5. Deploy
+
+Build and start commands are configured in `render.yaml`.
+
+## Development
+
+### Run Tests
+
 ```bash
-git add .
-git commit -m "Deploy career assistant agent"
-git push origin main
+# CLI test with interactive input
+python agent.py
 ```
 
-2. **Create Web Service on Render**
-   - Go to [Render Dashboard](https://dashboard.render.com/)
-   - Click **New +** → **Web Service**
-   - Connect your GitHub repository
-   - Select `career-assistant-agent`
+### API Documentation
 
-3. **Configure Environment**
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn app:app --host 0.0.0.0 --port $PORT`
-   - **Environment Variables**:
-     - `GROQ_API_KEY`: Your Groq API key
+Visit `/docs` for interactive Swagger UI documentation.
 
-4. **Deploy!** 🎉
-
----
-
-## 📊 How It Works
-
-### 1. **Resume Processing**
-- Extracts text from uploaded PDF
-- Parses skills, experience, and education
-- Prepares context for agent
-
-### 2. **Agent Reasoning**
-- LangChain AgentExecutor orchestrates tool calls
-- Llama 3.3 70B decides which tools to use
-- Tools execute in sequence or parallel
-
-### 3. **Tool Execution**
-
-#### 🔍 Job Search Tool
-- Analyzes target role requirements
-- Provides personalized job search strategies
-- Suggests companies and platforms
-
-#### 📊 Skill Gap Tool
-- Compares resume skills with role requirements
-- Identifies learning priorities
-- Recommends resources
-
-#### 💡 Project Idea Tool
-- Generates portfolio project ideas
-- Aligned with target role
-- Practical and impressive
-
-#### 🐙 GitHub Tool
-- Fetches profile via GitHub API
-- Reviews repositories and contributions
-- Suggests improvements
-
-### 4. **Response Generation**
-- Combines all tool outputs
-- Formats as structured JSON
-- Returns comprehensive career report
-
----
-
-## 🎓 Learning Outcomes
-
-Building this project taught me:
-
-✅ **Agent Architecture** - Understanding how agents orchestrate tool calls  
-✅ **LangChain Imports** - Correct modern import paths for `AgentExecutor`  
-✅ **API Integration** - Working with GitHub REST API and authentication  
-✅ **FastAPI + Pydantic** - Building production-ready REST APIs  
-✅ **Debugging** - Fixing model compatibility issues (Gemini → Groq migration)  
-✅ **JSON Parsing** - Using `StrOutputParser()` for structured outputs  
-✅ **Deployment** - Deploying LangChain apps to Render with environment variables  
-
----
-
-## 🐛 Troubleshooting
-
-### Issue: API Key Errors
-
-**Solution**: Ensure `GROQ_API_KEY` is set in environment
-```bash
-# Local
-echo "GROQ_API_KEY=your_key" > .env
-
-# Render
-Add in Environment Variables section
-```
-
-### Issue: Import Errors
-
-**Solution**: Use correct LangChain imports
-```python
-from langchain.agents import AgentExecutor
-from langchain.agents.tool_calling_agent.base import create_tool_calling_agent
-```
-
-### Issue: GitHub API Rate Limits
-
-**Solution**: Add GitHub personal access token to tool for higher limits
-
----
-
-## 🔮 Future Enhancements
-
-- [ ] Add custom frontend (HTML/CSS/JS) for better UX
-- [ ] Implement streaming responses for real-time feedback
-- [ ] Add caching for GitHub API calls
-- [ ] Support multiple file formats (DOCX, TXT)
-- [ ] Add LinkedIn profile analysis tool
-- [ ] Implement conversation memory for follow-up questions
-- [ ] Add unit tests and integration tests
-
----
-
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## License
+
+MIT License - see LICENSE file for details.
+
+## Acknowledgments
+
+- [Groq](https://groq.com) - Lightning-fast LLM inference
+- [LangChain](https://langchain.com) - Agent framework
+- [FastAPI](https://fastapi.tiangolo.com) - Web framework
+
+## Links
+
+- **Live Demo**: https://career-assistant-agent-bet6.onrender.com
+- **API Docs**: https://career-assistant-agent-bet6.onrender.com/docs
+- **GitHub**: https://github.com/Sathvik1533/career-assistant-agent
 
 ---
 
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **Groq** - For lightning-fast LLM inference
-- **LangChain** - For the agent framework
-- **FastAPI** - For the web framework
-- **Render** - For easy deployment
-
----
-
-<div align="center">
-
-**Built with ❤️ using LangChain & Groq**
-
-[🚀 Live Demo](https://career-assistant-agent-bet6.onrender.com/docs) • [📖 API Docs](https://career-assistant-agent-bet6.onrender.com/docs) • [🐛 Report Bug](https://github.com/Sathvik1533/career-assistant-agent/issues) • [✨ Request Feature](https://github.com/Sathvik1533/career-assistant-agent/issues)
-
----
-
-### 📬 Contact
-
-**Sathvik** - [@Sathvik1533](https://github.com/Sathvik1533)
-
-**Project Link**: https://github.com/Sathvik1533/career-assistant-agent
-
-</div>
+**Built with LangChain AgentExecutor and Groq Llama 3.3 70B**
