@@ -1,147 +1,84 @@
 """
-LangChain Career Assistant Agent (No LangGraph)
-
-Single agent with 4 tools that:
-1. Searches for jobs
-2. Analyzes skill gaps
-3. Suggests portfolio projects
-4. Checks GitHub profile
-
-Uses LangChain 0.3.x with tool-calling via ChatGoogleGenerativeAI
+Simple LangChain Career Assistant - LangServe Compatible
 """
 
 import os
-from typing import Dict, Any
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
-
-from tools import (
-    job_search_tool,
-    skill_gap_analysis_tool,
-    project_idea_generator_tool,
-    github_checker_tool
-)
-
-from utils import extract_text_from_pdf, synthesize_report
-
+from langchain_core.runnables import RunnablePassthrough
 
 def create_career_agent():
     """
-    Create a LangChain career assistant agent using tool calling.
-    Compatible with LangChain 0.3.x and LangServe.
+    Create a simple career assistant chain compatible with LangServe.
     """
     # Get API key
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
         raise ValueError("GOOGLE_API_KEY not found in environment")
     
-    # Initialize LLM with tool binding
+    # Initialize LLM
     llm = ChatGoogleGenerativeAI(
-        model="models/gemma-4-31b-it",
+        model="models/gemini-1.5-flash",  # Using a model that definitely exists
         google_api_key=api_key,
-        temperature=0.1,
+        temperature=0.7,
     )
-    
-    # Bind tools to LLM
-    tools = [
-        job_search_tool,
-        skill_gap_analysis_tool,
-        project_idea_generator_tool,
-        github_checker_tool
-    ]
-    
-    llm_with_tools = llm.bind_tools(tools)
     
     # Create prompt
     prompt = ChatPromptTemplate.from_messages([
-        ("system", """You are a Career Assistant Agent helping candidates improve their job prospects.
+        ("system", """You are a Career Assistant helping candidates with their job search.
 
-You have access to 4 tools:
-1. job_search_tool - Find relevant job openings
-2. skill_gap_analysis_tool - Analyze skill gaps
-3. project_idea_generator_tool - Suggest portfolio projects
-4. github_checker_tool - Check GitHub profile
+Based on the user's input about their resume, target role, and GitHub username, provide:
 
-Given a user's resume, target role, and GitHub username:
-1. Use ALL 4 tools to gather information
-2. Synthesize the results into a comprehensive career report
-3. Provide actionable recommendations
+1. **Job Search Tips**: Suggest where to find relevant jobs and what keywords to use
+2. **Skill Gap Analysis**: Based on their experience, identify likely skill gaps for their target role
+3. **Project Ideas**: Suggest 2-3 portfolio projects they could build
+4. **GitHub Profile Review**: Give tips on how to improve their GitHub presence
 
-Be thorough and use all available tools."""),
+Be specific, actionable, and encouraging."""),
         ("human", "{input}")
     ])
     
     # Build chain
-    chain = prompt | llm_with_tools | StrOutputParser()
+    chain = (
+        {"input": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
     
     return chain
 
 
-def run_career_analysis(resume_text: str, target_role: str, github_username: str) -> Dict[str, Any]:
-    """
-    Run complete career analysis with resume, target role, and GitHub profile.
-    
-    Returns comprehensive JSON report with:
-    - Job opportunities
-    - Skill gap analysis
-    - Project recommendations
-    - GitHub portfolio summary
-    """
-    # Basic validation
-    if not resume_text or not resume_text.strip():
-        return {"status": "error", "message": "Resume text is empty"}
-    if not target_role or not target_role.strip():
-        return {"status": "error", "message": "Target role is required"}
-    if not github_username or not github_username.strip():
-        return {"status": "error", "message": "GitHub username is required"}
-    
-    # Create agent
+def run_career_analysis(resume_text: str, target_role: str, github_username: str):
+    """Run career analysis - for REST API endpoint"""
     agent = create_career_agent()
     
-    # Prepare input
     user_input = f"""
-Please analyze this candidate's career prospects:
+Please analyze my career prospects:
 
 Target Role: {target_role}
 GitHub Username: {github_username}
 
-Resume:
-{resume_text[:2000]}...
+My Background:
+{resume_text[:1000]}
 
-Please:
-1. Search for {target_role} job openings
-2. Analyze skill gaps between resume and role
-3. Suggest portfolio projects to close gaps
-4. Review GitHub profile @{github_username}
-
-Provide a comprehensive career report.
+Please provide:
+1. Job search strategy
+2. Skill gap analysis
+3. Portfolio project ideas
+4. GitHub profile tips
 """
     
-    # Run analysis
-    try:
-        result = agent.invoke({"input": user_input})
-        
-        # Synthesize into structured report
-        report = {
-            "status": "success",
-            "target_role": target_role,
-            "github_username": github_username,
-            "analysis": result,
-            "message": "Career analysis completed successfully"
-        }
-        
-        return report
-        
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Analysis failed: {str(e)}",
-            "target_role": target_role,
-            "github_username": github_username
-        }
+    result = agent.invoke(user_input)
+    
+    return {
+        "status": "success",
+        "target_role": target_role,
+        "github_username": github_username,
+        "analysis": result
+    }
 
 
 if __name__ == "__main__":
-    print("✅ Career Agent module loaded (LangChain 0.3.x compatible)")
+    print("✅ Simple Career Agent loaded (LangServe compatible)")
