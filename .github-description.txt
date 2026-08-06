@@ -1,1 +1,0 @@
-LangChain agent for career assistance using Groq AI - analyzes resumes, suggests jobs & projects, reviews GitHub profiles
