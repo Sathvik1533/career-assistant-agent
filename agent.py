@@ -7,7 +7,8 @@ import os
 from typing import Dict, Any
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
 from pydantic import BaseModel, Field
 
 # Import our custom tools
@@ -21,9 +22,9 @@ class CareerAnalysisInput(BaseModel):
     github_username: str = Field(description="GitHub username")
 
 
-def create_career_agent() -> AgentExecutor:
+def create_career_agent():
     """
-    Create a tool-calling agent with AgentExecutor
+    Create a tool-calling agent
     
     The agent has access to 4 specialized tools:
     1. job_search_advisor - Job search strategies
@@ -32,7 +33,7 @@ def create_career_agent() -> AgentExecutor:
     4. github_profile_analyzer - GitHub profile review with API
     
     Returns:
-        AgentExecutor configured with career guidance tools
+        Configured LLM with tool binding
     """
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
@@ -45,51 +46,10 @@ def create_career_agent() -> AgentExecutor:
         temperature=0.7,
     )
     
-    # Create agent prompt
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", """You are an expert Career Assistant Agent with access to specialized tools.
-
-Your role is to provide comprehensive career guidance by:
-1. Using the job_search_advisor tool for job search strategies
-2. Using the skill_gap_analyzer tool for skill analysis
-3. Using the project_idea_generator tool for portfolio projects
-4. Using the github_profile_analyzer tool for GitHub profile review
-
-IMPORTANT: You MUST use ALL 4 tools to provide a complete analysis. Call each tool with appropriate inputs.
-
-After gathering information from all tools, synthesize the results into a comprehensive career report with these 4 sections:
-
-**1. Job Search Strategy**
-[Results from job_search_advisor tool]
-
-**2. Skill Gap Analysis**
-[Results from skill_gap_analyzer tool]
-
-**3. Project Ideas**
-[Results from project_idea_generator tool]
-
-**4. GitHub Profile Review**
-[Results from github_profile_analyzer tool]
-
-Be thorough, specific, and actionable in your guidance."""),
-        ("human", "{input}"),
-        ("placeholder", "{agent_scratchpad}")
-    ])
+    # Bind tools to LLM
+    llm_with_tools = llm.bind_tools(career_tools)
     
-    # Create the agent
-    agent = create_tool_calling_agent(llm, career_tools, prompt)
-    
-    # Create agent executor
-    agent_executor = AgentExecutor(
-        agent=agent,
-        tools=career_tools,
-        verbose=True,  # Show tool calls for debugging
-        handle_parsing_errors=True,
-        max_iterations=10,  # Allow multiple tool calls
-        return_intermediate_steps=False
-    )
-    
-    return agent_executor
+    return llm_with_tools
 
 
 def analyze_career(
@@ -98,7 +58,7 @@ def analyze_career(
     github_username: str
 ) -> Dict[str, Any]:
     """
-    Run comprehensive career analysis using agent with tools
+    Run comprehensive career analysis using tools
     
     Args:
         resume_text: Candidate's resume content
@@ -108,33 +68,69 @@ def analyze_career(
     Returns:
         Dictionary with analysis results and tool outputs
     """
-    agent_executor = create_career_agent()
-    
-    # Construct input for agent
-    input_text = f"""Please analyze this candidate's career profile:
-
-**Resume Summary:**
-{resume_text[:1000]}
-
-**Target Role:** {target_role}
-
-**GitHub Username:** {github_username}
-
-Use ALL 4 tools (job_search_advisor, skill_gap_analyzer, project_idea_generator, and github_profile_analyzer) to provide a complete analysis. Then synthesize the results into a comprehensive report."""
-
     try:
-        # Execute agent with tools
-        result = agent_executor.invoke({"input": input_text})
+        # Call each tool directly for now
+        print("🔧 Calling tools...")
+        
+        # Call job search tool
+        print("  1. Job Search Advisor...")
+        from tools import job_search_advisor
+        job_result = job_search_advisor.invoke({
+            "resume_text": resume_text[:800],
+            "target_role": target_role
+        })
+        
+        # Call skill gap tool
+        print("  2. Skill Gap Analyzer...")
+        from tools import skill_gap_analyzer
+        skill_result = skill_gap_analyzer.invoke({
+            "resume_text": resume_text[:800],
+            "target_role": target_role
+        })
+        
+        # Call project ideas tool
+        print("  3. Project Idea Generator...")
+        from tools import project_idea_generator
+        project_result = project_idea_generator.invoke({
+            "resume_text": resume_text[:800],
+            "target_role": target_role
+        })
+        
+        # Call GitHub tool
+        print("  4. GitHub Profile Analyzer...")
+        from tools import github_profile_analyzer
+        github_result = github_profile_analyzer.invoke({
+            "github_username": github_username
+        })
+        
+        # Combine results
+        full_analysis = f"""# Career Analysis Report
+
+## 1. Job Search Strategy
+{job_result}
+
+## 2. Skill Gap Analysis
+{skill_result}
+
+## 3. Project Ideas
+{project_result}
+
+## 4. GitHub Profile Review
+{github_result}
+"""
         
         return {
             "status": "success",
             "target_role": target_role,
             "github_username": github_username,
-            "analysis": result["output"],
+            "analysis": full_analysis,
             "tool_based": True
         }
         
     except Exception as e:
+        import traceback
+        print(f"❌ Error: {e}")
+        print(traceback.format_exc())
         return {
             "status": "error",
             "error": str(e),
@@ -160,33 +156,30 @@ def parse_analysis_sections(analysis_text: str) -> Dict[str, str]:
         "github_summary": ""
     }
     
-    # Try to split by section headers
-    markers = {
-        "job_search": ["**1. Job Search", "Job Search Strategy", "**Job Search"],
-        "skill_gaps": ["**2. Skill Gap", "Skill Gap Analysis", "**Skill"],
-        "project_ideas": ["**3. Project", "Project Ideas", "**Project"],
-        "github_summary": ["**4. GitHub", "GitHub Profile Review", "**GitHub"]
-    }
-    
-    # Simple parsing - split by markers
-    for section_key, possible_markers in markers.items():
-        for marker in possible_markers:
-            if marker in analysis_text:
-                # Find start of this section
-                start_idx = analysis_text.find(marker)
+    # Split by markdown headers
+    if "## 1. Job Search" in analysis_text:
+        parts = analysis_text.split("## 1. Job Search")
+        if len(parts) > 1:
+            rest = parts[1]
+            if "## 2. Skill Gap" in rest:
+                skill_parts = rest.split("## 2. Skill Gap")
+                sections["job_search"] = skill_parts[0].strip()
                 
-                # Find start of next section (or end of text)
-                end_idx = len(analysis_text)
-                for other_markers in markers.values():
-                    for other_marker in other_markers:
-                        idx = analysis_text.find(other_marker, start_idx + len(marker))
-                        if idx != -1 and idx < end_idx:
-                            end_idx = idx
-                
-                sections[section_key] = analysis_text[start_idx:end_idx].strip()
-                break
+                if len(skill_parts) > 1:
+                    rest2 = skill_parts[1]
+                    if "## 3. Project" in rest2:
+                        project_parts = rest2.split("## 3. Project")
+                        sections["skill_gaps"] = project_parts[0].strip()
+                        
+                        if len(project_parts) > 1:
+                            rest3 = project_parts[1]
+                            if "## 4. GitHub" in rest3:
+                                github_parts = rest3.split("## 4. GitHub")
+                                sections["project_ideas"] = github_parts[0].strip()
+                                if len(github_parts) > 1:
+                                    sections["github_summary"] = github_parts[1].strip()
     
-    # Fallback: if parsing failed, return full text in job_search
+    # Fallback
     if not sections["job_search"]:
         sections["job_search"] = analysis_text
         sections["skill_gaps"] = "See full analysis above"
@@ -202,7 +195,7 @@ def parse_analysis_sections(analysis_text: str) -> Dict[str, str]:
 
 def test_agent():
     """Test the agent with sample data"""
-    print("🧪 Testing Career Assistant Agent with Tools...\n")
+    print("🧪 Testing Career Assistant with Tools...\n")
     
     resume_text = """
     Software Engineer with 2 years of experience in Python and JavaScript.
@@ -217,13 +210,12 @@ def test_agent():
     print(f"📄 Resume: {resume_text[:100]}...")
     print(f"🎯 Target Role: {target_role}")
     print(f"🐙 GitHub: {github_username}\n")
-    print("🔧 Running agent with 4 tools...\n")
     
     try:
         result = analyze_career(resume_text, target_role, github_username)
         
         if result["status"] == "success":
-            print("✅ Analysis Complete!\n")
+            print("\n✅ Analysis Complete!\n")
             print("="*60)
             print(result["analysis"][:500])
             print("="*60)
