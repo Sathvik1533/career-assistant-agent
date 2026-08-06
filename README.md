@@ -2,7 +2,7 @@
 
 > **AI-powered career guidance using Groq's lightning-fast Llama 3.3 70B**
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-success?style=for-the-badge)](https://career-assistant-agent-bet6.onrender.com/agent/playground)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-success?style=for-the-badge)](https://career-assistant-agent-bet6.onrender.com/docs
 [![Powered by Groq](https://img.shields.io/badge/Powered%20by-Groq-FF6B00?style=for-the-badge)](https://groq.com)
 
 ## ✨ What It Does
