@@ -1,209 +1,278 @@
 """
-Four tools for the Career Assistant Agent:
-1. Job Search Tool - Find job openings
-2. Skill Gap Analysis Tool - Compare resume vs role
-3. Project Idea Generator Tool - Suggest portfolio projects
-4. GitHub Checker Tool - Analyze GitHub repos
+Career Assistant Tools - LangChain Tool Implementations
+Each tool provides specialized career guidance functionality
 """
 
 import os
 import requests
+from typing import Optional
 from langchain.tools import tool
 from langchain_groq import ChatGroq
-from typing import Dict, List
+from langchain_core.prompts import ChatPromptTemplate
 
-# Initialize LLM for tools that need it
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
-    groq_api_key=GROQ_API_KEY,
-    temperature=0.7
-)
+
+# Initialize Groq LLM for tools
+def get_llm():
+    """Get configured Groq LLM instance"""
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise ValueError("GROQ_API_KEY not set")
+    
+    return ChatGroq(
+        model="llama-3.3-70b-versatile",
+        groq_api_key=api_key,
+        temperature=0.7
+    )
 
 
 @tool
-def job_search_tool(target_role: str) -> str:
+def job_search_advisor(resume_text: str, target_role: str) -> str:
     """
-    Search for job openings matching the target role.
+    Provide personalized job search strategies based on resume and target role.
     
     Args:
-        target_role: The job title to search for (e.g., "Software Engineer")
-    
+        resume_text: Candidate's resume content
+        target_role: Desired job position
+        
     Returns:
-        JSON string with job listings including titles, companies, and requirements
+        Job search strategies and recommendations
     """
-    print(f"🔍 Searching for jobs: {target_role}")
+    llm = get_llm()
     
-    # Simple web search simulation
-    # In production, use Google Custom Search API or SERP API
-    prompt = f"""Generate a realistic list of 3-5 current job openings for the role: {target_role}
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", """You are a Job Search Expert specializing in tech careers.
 
-Return in this JSON format:
-{{
-    "jobs": [
-        {{
-            "title": "Job Title",
-            "company": "Company Name",
-            "location": "City, State/Remote",
-            "requirements": ["skill1", "skill2", "skill3"],
-            "link": "https://example.com/job"
-        }}
-    ]
-}}
+Provide specific, actionable job search strategies including:
+- Companies to target (by name)
+- Job boards and platforms to use
+- Keywords to include in applications
+- Networking strategies
+- Timeline and action steps"""),
+        ("human", """Target Role: {target_role}
 
-Be realistic and include actual tech companies and common requirements for this role."""
+Resume Summary: {resume_text}
+
+Provide detailed job search strategies.""")
+    ])
     
-    result = llm.invoke(prompt)
+    chain = prompt | llm
+    result = chain.invoke({
+        "target_role": target_role,
+        "resume_text": resume_text[:800]
+    })
+    
     return result.content
 
 
 @tool
-def skill_gap_analysis_tool(resume_text: str, target_role: str) -> str:
+def skill_gap_analyzer(resume_text: str, target_role: str) -> str:
     """
-    Analyze skill gaps between resume and target role requirements.
+    Analyze skill gaps between current resume and target role requirements.
     
     Args:
-        resume_text: Extracted text from resume PDF
-        target_role: Target job role
-    
+        resume_text: Candidate's resume content
+        target_role: Desired job position
+        
     Returns:
-        JSON string with missing skills, existing strengths, and recommendations
+        Detailed skill gap analysis with learning recommendations
     """
-    print(f"📊 Analyzing skill gaps for: {target_role}")
+    llm = get_llm()
     
-    prompt = f"""Analyze the following resume against the target role: {target_role}
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", """You are a Skill Development Expert for tech professionals.
 
-Resume:
-{resume_text}
+Analyze the candidate's current skills vs. target role requirements and provide:
+- Technical skills needed (specific technologies/frameworks)
+- Soft skills to develop
+- Recommended learning resources (courses, books, tutorials)
+- Time estimates for skill development
+- Practice opportunities"""),
+        ("human", """Target Role: {target_role}
 
-Provide a detailed skill gap analysis in this JSON format:
-{{
-    "existing_skills": ["skill1", "skill2", ...],
-    "missing_skills": ["skill1", "skill2", ...],
-    "strength_areas": ["area1", "area2", ...],
-    "recommendations": ["rec1", "rec2", ...],
-    "match_percentage": 75
-}}
+Current Skills from Resume: {resume_text}
 
-Be thorough and honest about gaps."""
+Analyze skill gaps and provide learning roadmap.""")
+    ])
     
-    result = llm.invoke(prompt)
+    chain = prompt | llm
+    result = chain.invoke({
+        "target_role": target_role,
+        "resume_text": resume_text[:800]
+    })
+    
     return result.content
 
 
 @tool
-def project_idea_generator_tool(missing_skills: str, target_role: str) -> str:
+def project_idea_generator(resume_text: str, target_role: str) -> str:
     """
-    Generate portfolio project ideas to close skill gaps.
+    Generate portfolio project ideas tailored to target role and current skills.
     
     Args:
-        missing_skills: List or description of missing skills
-        target_role: Target job role
-    
+        resume_text: Candidate's resume content
+        target_role: Desired job position
+        
     Returns:
-        JSON string with project ideas, tech stacks, and difficulty levels
+        2-3 specific project ideas with implementation details
     """
-    print(f"�� Generating project ideas to close skill gaps")
+    llm = get_llm()
     
-    prompt = f"""Given these missing skills: {missing_skills}
-For target role: {target_role}
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", """You are a Portfolio Development Expert for tech professionals.
 
-Generate 3-5 portfolio project ideas that would help close these gaps.
+Generate 2-3 impressive portfolio project ideas that:
+- Demonstrate skills needed for the target role
+- Build on candidate's existing knowledge
+- Are realistic to complete in 2-4 weeks each
+- Include specific technologies to use
+- Have clear showcase value
 
-Return in this JSON format:
-{{
-    "projects": [
-        {{
-            "title": "Project Name",
-            "description": "What it does",
-            "tech_stack": ["tech1", "tech2", "tech3"],
-            "difficulty": "Beginner/Intermediate/Advanced",
-            "time_estimate": "X weeks",
-            "skills_practiced": ["skill1", "skill2"],
-            "github_repo_structure": "Brief outline of repo structure"
-        }}
-    ]
-}}
+For each project provide:
+- Project name and description
+- Technologies/frameworks to use
+- Key features to implement
+- Learning outcomes
+- How to present it effectively"""),
+        ("human", """Target Role: {target_role}
 
-Make projects realistic, practical, and impressive for the role."""
+Current Experience: {resume_text}
+
+Generate tailored project ideas.""")
+    ])
     
-    result = llm.invoke(prompt)
+    chain = prompt | llm
+    result = chain.invoke({
+        "target_role": target_role,
+        "resume_text": resume_text[:800]
+    })
+    
     return result.content
 
 
 @tool
-def github_checker_tool(github_username: str) -> str:
+def github_profile_analyzer(github_username: str) -> str:
     """
-    Check GitHub profile and analyze public repositories.
+    Analyze GitHub profile using GitHub REST API and provide optimization tips.
     
     Args:
         github_username: GitHub username to analyze
-    
+        
     Returns:
-        JSON string with repo summary, languages, and activity
+        GitHub profile analysis with improvement recommendations
     """
-    print(f"🐙 Checking GitHub profile: {github_username}")
-    
     try:
-        # Get user info
+        # Fetch user data from GitHub API
+        user_url = f"https://api.github.com/users/{github_username}"
+        repos_url = f"https://api.github.com/users/{github_username}/repos?sort=updated&per_page=10"
+        
+        headers = {
+            "Accept": "application/vnd.github.v3+json"
+        }
+        
+        # Add GitHub token if available for higher rate limits
         github_token = os.getenv("GITHUB_TOKEN")
-        headers = {}
         if github_token:
             headers["Authorization"] = f"token {github_token}"
         
-        user_response = requests.get(
-            f"https://api.github.com/users/{github_username}",
-            headers=headers
-        )
+        # Get user profile
+        user_response = requests.get(user_url, headers=headers, timeout=10)
+        if user_response.status_code != 200:
+            return f"Could not fetch GitHub profile for '{github_username}'. User may not exist or API limit reached."
+        
         user_data = user_response.json()
         
-        # Get repos
-        repos_response = requests.get(
-            f"https://api.github.com/users/{github_username}/repos?per_page=100&sort=updated",
-            headers=headers
-        )
-        repos = repos_response.json()
+        # Get repositories
+        repos_response = requests.get(repos_url, headers=headers, timeout=10)
+        repos_data = repos_response.json() if repos_response.status_code == 200 else []
         
-        # Analyze repos
-        languages = {}
-        repo_list = []
-        
-        for repo in repos[:10]:  # Top 10 most recent
-            if not repo.get("fork", False):  # Skip forks
-                repo_list.append({
-                    "name": repo["name"],
-                    "description": repo.get("description", "No description"),
-                    "language": repo.get("language", "Unknown"),
-                    "stars": repo.get("stargazers_count", 0),
-                    "url": repo["html_url"]
-                })
-                
-                # Count languages
-                lang = repo.get("language")
-                if lang:
-                    languages[lang] = languages.get(lang, 0) + 1
-        
-        result = {
-            "username": github_username,
-            "name": user_data.get("name", "N/A"),
-            "bio": user_data.get("bio", "N/A"),
+        # Extract key information
+        profile_info = {
+            "username": user_data.get("login"),
+            "name": user_data.get("name"),
+            "bio": user_data.get("bio"),
             "public_repos": user_data.get("public_repos", 0),
             "followers": user_data.get("followers", 0),
-            "top_languages": dict(sorted(languages.items(), key=lambda x: x[1], reverse=True)[:5]),
-            "recent_repos": repo_list,
-            "profile_url": user_data.get("html_url", "")
+            "following": user_data.get("following", 0),
+            "company": user_data.get("company"),
+            "location": user_data.get("location"),
+            "blog": user_data.get("blog"),
+            "twitter": user_data.get("twitter_username")
         }
         
-        return str(result)
+        # Analyze repositories
+        repo_info = []
+        languages_used = set()
         
+        for repo in repos_data[:10]:  # Top 10 repos
+            repo_info.append({
+                "name": repo.get("name"),
+                "description": repo.get("description"),
+                "language": repo.get("language"),
+                "stars": repo.get("stargazers_count", 0),
+                "forks": repo.get("forks_count", 0),
+                "updated": repo.get("updated_at")
+            })
+            if repo.get("language"):
+                languages_used.add(repo.get("language"))
+        
+        # Use LLM to analyze and provide recommendations
+        llm = get_llm()
+        
+        analysis_prompt = f"""Analyze this GitHub profile and provide specific improvement recommendations:
+
+**Profile Summary:**
+- Username: {profile_info['username']}
+- Name: {profile_info['name'] or 'Not set'}
+- Bio: {profile_info['bio'] or 'Not set'}
+- Public Repos: {profile_info['public_repos']}
+- Followers: {profile_info['followers']}
+- Following: {profile_info['following']}
+- Company: {profile_info['company'] or 'Not set'}
+- Location: {profile_info['location'] or 'Not set'}
+- Website: {profile_info['blog'] or 'Not set'}
+
+**Recent Repositories:**
+{chr(10).join(f"- {r['name']}: {r['description'] or 'No description'} ({r['language'] or 'N/A'}) - ⭐ {r['stars']}" for r in repo_info[:5])}
+
+**Languages Used:** {', '.join(languages_used) if languages_used else 'None detected'}
+
+Provide specific, actionable recommendations for:
+1. Profile completeness (bio, pinned repos, README)
+2. Repository organization and documentation
+3. Project showcase improvements
+4. Contribution strategies
+5. Professional presentation"""
+
+        result = llm.invoke(analysis_prompt)
+        
+        return result.content
+        
+    except requests.exceptions.RequestException as e:
+        return f"Error fetching GitHub data: {str(e)}. Please check the username and try again."
     except Exception as e:
-        return f'{{"error": "Failed to fetch GitHub data: {str(e)}"}}'
+        return f"Error analyzing GitHub profile: {str(e)}"
 
 
-# Export all tools
-__all__ = [
-    "job_search_tool",
-    "skill_gap_analysis_tool", 
-    "project_idea_generator_tool",
-    "github_checker_tool"
+# List of all tools for agent
+career_tools = [
+    job_search_advisor,
+    skill_gap_analyzer,
+    project_idea_generator,
+    github_profile_analyzer
 ]
+
+
+def get_tool_descriptions() -> str:
+    """Get formatted descriptions of all available tools"""
+    descriptions = []
+    for tool in career_tools:
+        descriptions.append(f"- {tool.name}: {tool.description}")
+    return "\n".join(descriptions)
+
+
+if __name__ == "__main__":
+    print("Career Assistant Tools")
+    print("=" * 60)
+    print("\nAvailable Tools:")
+    print(get_tool_descriptions())
+    print("\n✅ Tools module loaded successfully")
