@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = 'https://career-assistant-agent-bet6.onrender.com';
+const API_BASE_URL = window.location.origin; // Use same origin in production
 
 // DOM Elements
 const form = document.getElementById('careerForm');
@@ -8,27 +8,33 @@ const fileName = document.getElementById('fileName');
 const submitBtn = document.getElementById('submitBtn');
 const submitText = document.getElementById('submitText');
 const submitLoader = document.getElementById('submitLoader');
+const statusConsole = document.getElementById('statusConsole');
+const consoleBody = document.getElementById('consoleBody');
 const resultsSection = document.getElementById('results');
-const analyzerForm = document.getElementById('analyzer-form');
+
+// Configure marked.js for secure markdown rendering
+if (typeof marked !== 'undefined') {
+    marked.setOptions({
+        breaks: true,
+        gfm: true,
+        headerIds: false,
+        mangle: false
+    });
+}
 
 // File input change handler
 fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
         fileName.textContent = file.name;
-        fileName.style.color = 'var(--primary)';
+        fileName.style.color = '#FF6F00';
     } else {
         fileName.textContent = 'No file chosen';
-        fileName.style.color = 'var(--text-secondary)';
+        fileName.style.color = '#666';
     }
 });
 
-// Smooth scroll to form
-function scrollToForm() {
-    analyzerForm.scrollIntoView({ behavior: 'smooth' });
-}
-
-// Form submission handler
+// Form submission handler with SSE streaming
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -62,35 +68,117 @@ form.addEventListener('submit', async (e) => {
     // Show loading state
     setLoadingState(true);
     
+    // Show status console
+    statusConsole.classList.remove('hidden');
+    consoleBody.innerHTML = '';
+    resultsSection.classList.add('hidden');
+    
+    // Scroll to console
+    setTimeout(() => {
+        statusConsole.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+    
     try {
-        // Make API request
-        const response = await fetch(`${API_BASE_URL}/analyze`, {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `Server error: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        // Display results
-        displayResults(data);
-        
-        // Scroll to results
-        setTimeout(() => {
-            resultsSection.scrollIntoView({ behavior: 'smooth' });
-        }, 300);
+        // Use SSE endpoint for live streaming
+        await streamAnalysis(formData);
         
     } catch (error) {
         console.error('Error:', error);
+        addConsoleMessage('error', `❌ Error: ${error.message}`);
         showError(error.message || 'Failed to analyze. Please try again.');
-    } finally {
         setLoadingState(false);
     }
 });
+
+// Stream analysis with Server-Sent Events
+async function streamAnalysis(formData) {
+    return new Promise((resolve, reject) => {
+        // Create SSE connection
+        const url = `${API_BASE_URL}/analyze-stream`;
+        
+        fetch(url, {
+            method: 'POST',
+            body: formData
+        })
+        .then(async response => {
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || `Server error: ${response.status}`);
+            }
+            
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            
+            // Read stream
+            while (true) {
+                const { done, value } = await reader.read();
+                
+                if (done) break;
+                
+                // Decode chunk
+                buffer += decoder.decode(value, { stream: true });
+                
+                // Process complete messages
+                const lines = buffer.split('\n\n');
+                buffer = lines.pop(); // Keep incomplete message in buffer
+                
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = JSON.parse(line.slice(6));
+                        handleStreamMessage(data);
+                        
+                        // Check if done
+                        if (data.status === 'done') {
+                            setLoadingState(false);
+                            
+                            if (data.error) {
+                                reject(new Error(data.error));
+                            } else if (data.data) {
+                                displayResults(data.data);
+                                resolve();
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+        })
+        .catch(error => {
+            setLoadingState(false);
+            reject(error);
+        });
+    });
+}
+
+// Handle SSE stream messages
+function handleStreamMessage(data) {
+    if (data.message) {
+        addConsoleMessage(data.status, data.message);
+    }
+}
+
+// Add message to console
+function addConsoleMessage(type, message) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `console-message console-${type}`;
+    messageDiv.textContent = message;
+    
+    consoleBody.appendChild(messageDiv);
+    
+    // Auto-scroll to bottom
+    consoleBody.scrollTop = consoleBody.scrollHeight;
+    
+    // Animate in
+    messageDiv.style.opacity = '0';
+    messageDiv.style.transform = 'translateX(-10px)';
+    
+    setTimeout(() => {
+        messageDiv.style.transition = 'all 0.3s ease';
+        messageDiv.style.opacity = '1';
+        messageDiv.style.transform = 'translateX(0)';
+    }, 10);
+}
 
 // Set loading state
 function setLoadingState(isLoading) {
@@ -105,24 +193,36 @@ function setLoadingState(isLoading) {
     }
 }
 
-// Display results
+// Display results with markdown rendering
 function displayResults(data) {
     // Show results section
     resultsSection.classList.remove('hidden');
     
-    // Populate result cards
+    // Scroll to results
+    setTimeout(() => {
+        resultsSection.scrollIntoView({ behavior: 'smooth' });
+    }, 300);
+    
+    // Populate result cards with markdown rendering
     const results = {
-        jobSearchResult: data.job_search || data.output?.job_search || 'No job search data available',
-        skillGapResult: data.skill_gaps || data.output?.skill_gaps || 'No skill gap data available',
-        projectIdeasResult: data.project_ideas || data.output?.project_ideas || 'No project ideas available',
-        githubReviewResult: data.github_summary || data.output?.github_summary || 'No GitHub review available'
+        jobSearchResult: data.job_search || 'No job search data available',
+        skillGapResult: data.skill_gaps || 'No skill gap data available',
+        projectIdeasResult: data.project_ideas || 'No project ideas available',
+        githubReviewResult: data.github_summary || 'No GitHub review available'
     };
     
-    // Animate results in
+    // Animate results in with markdown
     Object.keys(results).forEach((key, index) => {
         setTimeout(() => {
             const element = document.getElementById(key);
-            element.innerHTML = formatText(results[key]);
+            
+            // Render markdown to HTML
+            const markdownText = results[key];
+            const htmlContent = typeof marked !== 'undefined' 
+                ? marked.parse(markdownText) 
+                : formatTextFallback(markdownText);
+            
+            element.innerHTML = htmlContent;
             element.style.opacity = '0';
             element.style.transform = 'translateY(20px)';
             
@@ -131,12 +231,12 @@ function displayResults(data) {
                 element.style.opacity = '1';
                 element.style.transform = 'translateY(0)';
             }, 50);
-        }, index * 100);
+        }, index * 150);
     });
 }
 
-// Format text for better readability
-function formatText(text) {
+// Fallback text formatting if marked.js fails to load
+function formatTextFallback(text) {
     if (!text || typeof text !== 'string') return 'No data available';
     
     // Replace numbered lists
@@ -154,6 +254,9 @@ function formatText(text) {
     // Highlight important sections
     text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     
+    // Convert ## headers
+    text = text.replace(/^##\s+(.+)$/gm, '<h4>$1</h4>');
+    
     return text;
 }
 
@@ -166,7 +269,7 @@ function showError(message) {
         position: fixed;
         top: 24px;
         right: 24px;
-        background: var(--error);
+        background: #f44336;
         color: white;
         padding: 16px 24px;
         border-radius: 12px;
@@ -190,11 +293,13 @@ function showError(message) {
 function resetForm() {
     form.reset();
     fileName.textContent = 'No file chosen';
-    fileName.style.color = 'var(--text-secondary)';
+    fileName.style.color = '#666';
     resultsSection.classList.add('hidden');
+    statusConsole.classList.add('hidden');
+    consoleBody.innerHTML = '';
     
     // Scroll to form
-    analyzerForm.scrollIntoView({ behavior: 'smooth' });
+    form.scrollIntoView({ behavior: 'smooth' });
 }
 
 // Add CSS animations
@@ -224,41 +329,7 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Handle smooth scrolling for navigation links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({ behavior: 'smooth' });
-        }
-    });
-});
-
-// Add scroll-based header shadow
-let lastScroll = 0;
-const header = document.querySelector('.header');
-
-window.addEventListener('scroll', () => {
-    const currentScroll = window.pageYOffset;
-    
-    if (currentScroll > 50) {
-        header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
-    } else {
-        header.style.boxShadow = 'none';
-    }
-    
-    lastScroll = currentScroll;
-});
-
-// Add loading animation to result cards
-function showLoadingSkeleton() {
-    const resultCards = document.querySelectorAll('.result-content');
-    resultCards.forEach(card => {
-        card.innerHTML = '<div class="skeleton"></div>';
-    });
-}
-
 // Log initialization
-console.log('Career Assistant Agent - Frontend Initialized');
+console.log('Career Assistant Agent - Frontend Initialized with SSE');
 console.log('API Base URL:', API_BASE_URL);
+console.log('Marked.js loaded:', typeof marked !== 'undefined');

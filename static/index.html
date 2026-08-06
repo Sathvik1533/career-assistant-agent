@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Career Assistant</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -21,7 +23,7 @@
                     <div class="form-group">
                         <label for="resume">Resume (PDF)</label>
                         <input type="file" id="resume" accept=".pdf" required>
-                        <span class="file-name" id="fileName"></span>
+                        <span class="file-name" id="fileName">No file chosen</span>
                     </div>
 
                     <div class="form-group">
@@ -51,31 +53,42 @@
                 </form>
             </section>
 
+            <!-- Live Status Console -->
+            <section id="statusConsole" class="status-console hidden">
+                <div class="console-header">
+                    <span class="console-title">🔴 Live Agent Status</span>
+                    <span class="console-badge">AgentExecutor</span>
+                </div>
+                <div class="console-body" id="consoleBody">
+                    <!-- Status messages will appear here -->
+                </div>
+            </section>
+
             <!-- Results Section -->
             <section id="results" class="results hidden">
                 <div class="results-header">
-                    <h2>Analysis</h2>
+                    <h2>Analysis Results</h2>
                     <button onclick="resetForm()" class="btn-reset">New Analysis</button>
                 </div>
                 
                 <div class="result-card">
-                    <h3>Job Search</h3>
-                    <div id="jobSearchResult"></div>
+                    <h3>💼 Job Search Strategy</h3>
+                    <div id="jobSearchResult" class="markdown-content"></div>
                 </div>
 
                 <div class="result-card">
-                    <h3>Skills</h3>
-                    <div id="skillGapResult"></div>
+                    <h3>📊 Skill Gap Analysis</h3>
+                    <div id="skillGapResult" class="markdown-content"></div>
                 </div>
 
                 <div class="result-card">
-                    <h3>Projects</h3>
-                    <div id="projectIdeasResult"></div>
+                    <h3>💡 Project Ideas</h3>
+                    <div id="projectIdeasResult" class="markdown-content"></div>
                 </div>
 
                 <div class="result-card">
-                    <h3>GitHub</h3>
-                    <div id="githubReviewResult"></div>
+                    <h3>🐙 GitHub Profile Review</h3>
+                    <div id="githubReviewResult" class="markdown-content"></div>
                 </div>
             </section>
         </main>
