@@ -21,7 +21,7 @@ load_dotenv()
 
 app = FastAPI(
     title="Career Assistant Agent",
-    version="5.0.0",
+    version="5.1.0",
     description="Career Assistant using Groq with Custom Frontend"
 )
 
