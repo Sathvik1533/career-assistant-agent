@@ -24,7 +24,7 @@ from tools import (
     github_checker_tool
 )
 
-from utils import extract_text_from_pdf, validate_inputs, synthesize_report
+from utils import extract_text_from_pdf, synthesize_report
 
 
 def create_career_agent():
@@ -89,8 +89,13 @@ def run_career_analysis(resume_text: str, target_role: str, github_username: str
     - Project recommendations
     - GitHub portfolio summary
     """
-    # Validate inputs
-    validate_inputs(resume_text, target_role, github_username)
+    # Basic validation
+    if not resume_text or not resume_text.strip():
+        return {"status": "error", "message": "Resume text is empty"}
+    if not target_role or not target_role.strip():
+        return {"status": "error", "message": "Target role is required"}
+    if not github_username or not github_username.strip():
+        return {"status": "error", "message": "GitHub username is required"}
     
     # Create agent
     agent = create_career_agent()
@@ -119,11 +124,13 @@ Provide a comprehensive career report.
         result = agent.invoke({"input": user_input})
         
         # Synthesize into structured report
-        report = synthesize_report(
-            result=result,
-            target_role=target_role,
-            github_username=github_username
-        )
+        report = {
+            "status": "success",
+            "target_role": target_role,
+            "github_username": github_username,
+            "analysis": result,
+            "message": "Career analysis completed successfully"
+        }
         
         return report
         
