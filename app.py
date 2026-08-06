@@ -164,7 +164,10 @@ async def status_generator(resume_text: str, target_role: str, github_username: 
         result = analyze_career(resume_text, target_role, github_username)
         
         if result["status"] != "success":
-            yield f"data: {json.dumps({'status': 'error', 'message': f'❌ Agent error: {result.get(\"error\")}'})}\n\n"
+            err_msg = result.get("error")
+            yield f"data: {json.dumps({'status': 'error', 'message': f'❌ Agent error: {err_msg}'})}\
+\
+"
             yield f"data: {json.dumps({'status': 'done', 'error': result.get('error')})}\n\n"
             return
         
