@@ -1,6 +1,6 @@
 """
 Career Assistant Agent with Real AgentExecutor
-Uses LangChain's create_tool_calling_agent and AgentExecutor for proper runtime loop
+Uses LangChain's create_openai_tools_agent and AgentExecutor for proper runtime loop
 """
 
 import os
@@ -8,8 +8,7 @@ import re
 from typing import Dict, Any, List
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.agents.tool_calling_agent.base import create_tool_calling_agent
-from langchain.agents.agent import AgentExecutor
+from langchain.agents import AgentExecutor, create_openai_tools_agent
 
 # Import our custom tools
 try:
@@ -84,7 +83,7 @@ Use all 4 tools to gather insights, then provide a complete career analysis repo
     ])
     
     # Create tool-calling agent
-    agent = create_tool_calling_agent(llm, career_tools, prompt)
+    agent = create_openai_tools_agent(llm, career_tools, prompt)
     
     # Create AgentExecutor with runtime loop
     agent_executor = AgentExecutor(
