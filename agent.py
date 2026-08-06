@@ -1,5 +1,5 @@
 """
-LangChain Career Assistant - LangServe Compatible with Input Schema
+LangChain Career Assistant - with CORRECT Gemini model name
 """
 
 import os
@@ -7,7 +7,6 @@ from typing import Dict, Any
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableLambda
 from pydantic import BaseModel, Field
 
 
@@ -18,16 +17,17 @@ class CareerInput(BaseModel):
 
 def create_career_agent():
     """
-    Create a career assistant chain with proper input schema for LangServe.
+    Create a career assistant chain with proper model name.
     """
     # Get API key
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
         raise ValueError("GOOGLE_API_KEY not found in environment")
     
-    # Initialize LLM
+    # Initialize LLM with CORRECT model name
+    # Options: gemini-pro, gemini-1.5-pro, gemini-1.5-flash-latest
     llm = ChatGoogleGenerativeAI(
-        model="models/gemini-1.5-flash",
+        model="gemini-1.5-flash-latest",  # Correct model name!
         google_api_key=api_key,
         temperature=0.7,
     )
@@ -79,4 +79,4 @@ Please analyze and provide job search tips, skill gaps, project ideas, and GitHu
 
 
 if __name__ == "__main__":
-    print("✅ Career Agent with input schema loaded")
+    print("✅ Career Agent with correct model name loaded")
