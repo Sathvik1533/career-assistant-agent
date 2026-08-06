@@ -53,16 +53,16 @@
                 </form>
             </section>
 
-            <!-- Live Status Console -->
-            <section id="statusConsole" class="status-console hidden">
-                <div class="console-header">
-                    <span class="console-title">🔴 Live Agent Status</span>
-                    <span class="console-badge">AgentExecutor</span>
+            <!-- Live Agent Console Stream -->
+            <div id="terminal-container" style="display: none; background-color: #1e1e1e; color: #34d399; font-family: 'Courier New', Courier, monospace; padding: 15px; border-radius: 6px; margin: 20px 0; box-shadow: inset 0 0 10px #000; border-left: 4px solid #10b981;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 5px; margin-bottom: 10px; font-size: 12px; color: #94a3b8;">
+                    <span>🤖 AGENT EXECUTION CONSOLE</span>
+                    <span id="terminal-status">PROCESSING...</span>
                 </div>
-                <div class="console-body" id="consoleBody">
-                    <!-- Status messages will appear here -->
+                <div id="terminal-logs" style="font-size: 14px; line-height: 1.6; max-height: 200px; overflow-y: auto;">
+                    <!-- Streaming logs will be appended here dynamically -->
                 </div>
-            </section>
+            </div>
 
             <!-- Results Section -->
             <section id="results" class="results hidden">
@@ -87,7 +87,7 @@
                 </div>
 
                 <div class="result-card">
-                    <h3>🐙 GitHub Profile Review</h3>
+                    <h3>�� GitHub Profile Review</h3>
                     <div id="githubReviewResult" class="markdown-content"></div>
                 </div>
             </section>

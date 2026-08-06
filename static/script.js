@@ -8,8 +8,9 @@ const fileName = document.getElementById('fileName');
 const submitBtn = document.getElementById('submitBtn');
 const submitText = document.getElementById('submitText');
 const submitLoader = document.getElementById('submitLoader');
-const statusConsole = document.getElementById('statusConsole');
-const consoleBody = document.getElementById('consoleBody');
+const terminalContainer = document.getElementById('terminal-container');
+const terminalLogs = document.getElementById('terminal-logs');
+const terminalStatus = document.getElementById('terminal-status');
 const resultsSection = document.getElementById('results');
 
 // Configure marked.js for secure markdown rendering
@@ -68,14 +69,16 @@ form.addEventListener('submit', async (e) => {
     // Show loading state
     setLoadingState(true);
     
-    // Show status console
-    statusConsole.classList.remove('hidden');
-    consoleBody.innerHTML = '';
+    // Show and initialize terminal
+    terminalContainer.style.display = 'block';
+    terminalLogs.innerHTML = '';
+    terminalStatus.innerText = 'PROCESSING...';
+    terminalStatus.style.color = '#34d399';
     resultsSection.classList.add('hidden');
     
-    // Scroll to console
+    // Scroll to terminal
     setTimeout(() => {
-        statusConsole.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        terminalContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
     
     try {
@@ -84,7 +87,9 @@ form.addEventListener('submit', async (e) => {
         
     } catch (error) {
         console.error('Error:', error);
-        addConsoleMessage('error', `❌ Error: ${error.message}`);
+        addTerminalLog(`❌ Error: ${error.message}`, '#e06c75');
+        terminalStatus.innerText = 'ERROR';
+        terminalStatus.style.color = '#e06c75';
         showError(error.message || 'Failed to analyze. Please try again.');
         setLoadingState(false);
     }
@@ -135,7 +140,24 @@ async function streamAnalysis(formData) {
                             if (data.error) {
                                 reject(new Error(data.error));
                             } else if (data.data) {
-                                displayResults(data.data);
+                                // Mark as complete
+                                terminalStatus.innerText = 'COMPLETE';
+                                terminalStatus.style.color = '#60a5fa';
+                                
+                                const successLine = document.createElement('div');
+                                successLine.innerText = "✅ [Complete] Structured response verified. Displaying report below.";
+                                successLine.style.color = "#60a5fa";
+                                successLine.style.marginTop = "8px";
+                                terminalLogs.appendChild(successLine);
+                                
+                                // Scroll to show success line
+                                terminalLogs.scrollTop = terminalLogs.scrollHeight;
+                                
+                                // Display results after short delay
+                                setTimeout(() => {
+                                    displayResults(data.data);
+                                }, 500);
+                                
                                 resolve();
                             }
                             return;
@@ -154,30 +176,31 @@ async function streamAnalysis(formData) {
 // Handle SSE stream messages
 function handleStreamMessage(data) {
     if (data.message) {
-        addConsoleMessage(data.status, data.message);
+        // Map status types to colors
+        const colorMap = {
+            'info': '#61afef',      // Blue
+            'success': '#98c379',   // Green
+            'tool': '#e5c07b',      // Yellow
+            'error': '#e06c75',     // Red
+            'done': '#56b6c2'       // Cyan
+        };
+        
+        const color = colorMap[data.status] || '#34d399'; // Default green
+        addTerminalLog(data.message, color);
     }
 }
 
-// Add message to console
-function addConsoleMessage(type, message) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `console-message console-${type}`;
-    messageDiv.textContent = message;
+// Add log to terminal
+function addTerminalLog(message, color = '#34d399') {
+    const logLine = document.createElement('div');
+    logLine.innerText = message;
+    logLine.style.color = color;
+    logLine.style.marginBottom = '4px';
     
-    consoleBody.appendChild(messageDiv);
+    terminalLogs.appendChild(logLine);
     
     // Auto-scroll to bottom
-    consoleBody.scrollTop = consoleBody.scrollHeight;
-    
-    // Animate in
-    messageDiv.style.opacity = '0';
-    messageDiv.style.transform = 'translateX(-10px)';
-    
-    setTimeout(() => {
-        messageDiv.style.transition = 'all 0.3s ease';
-        messageDiv.style.opacity = '1';
-        messageDiv.style.transform = 'translateX(0)';
-    }, 10);
+    terminalLogs.scrollTop = terminalLogs.scrollHeight;
 }
 
 // Set loading state
@@ -295,8 +318,8 @@ function resetForm() {
     fileName.textContent = 'No file chosen';
     fileName.style.color = '#666';
     resultsSection.classList.add('hidden');
-    statusConsole.classList.add('hidden');
-    consoleBody.innerHTML = '';
+    terminalContainer.style.display = 'none';
+    terminalLogs.innerHTML = '';
     
     // Scroll to form
     form.scrollIntoView({ behavior: 'smooth' });
@@ -333,3 +356,4 @@ document.head.appendChild(style);
 console.log('Career Assistant Agent - Frontend Initialized with SSE');
 console.log('API Base URL:', API_BASE_URL);
 console.log('Marked.js loaded:', typeof marked !== 'undefined');
+console.log('Terminal-style console ready');
