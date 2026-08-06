@@ -1,12 +1,6 @@
 """
-Career Assistant Agent - FastAPI Application
-Powered by Groq Llama 3.3 70B + LangChain
-
-Features:
-- Custom minimal frontend (HTML/CSS/JS)
-- PDF resume upload and text extraction
-- LangServe playground for testing
-- RESTful API endpoints
+Career Assistant Agent - Full Production Application
+Features: Real AgentExecutor, 4 LangChain Tools, GitHub API Integration
 """
 
 import os
@@ -18,11 +12,10 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
-from langchain_groq import ChatGroq
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langserve import add_routes
 import PyPDF2
+
+# Import agent with tools
+from agent import create_career_agent, analyze_career, parse_analysis_sections
 
 # Load environment variables
 load_dotenv()
@@ -30,11 +23,11 @@ load_dotenv()
 # Initialize FastAPI app
 app = FastAPI(
     title="Career Assistant Agent",
-    version="5.2.0",
-    description="AI-powered career guidance using Groq Llama 3.3 70B"
+    version="6.0.0",
+    description="AI Career Assistant with AgentExecutor and 4 Specialized Tools"
 )
 
-# Enable CORS for cross-origin requests
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -49,87 +42,16 @@ app.add_middleware(
 # ============================================================================
 
 class CareerRequest(BaseModel):
-    """JSON request model for legacy API"""
+    """JSON request model"""
     resume_text: str
     target_role: str
     github_username: str
 
 
-class PlaygroundInput(BaseModel):
-    """Input schema for LangServe playground"""
-    query: str = Field(
-        description="Career analysis query with resume, role, and GitHub username"
-    )
-
-
 # ============================================================================
-# LANGCHAIN AGENT
+# STATIC FILES
 # ============================================================================
 
-def create_agent():
-    """
-    Create Groq-powered LangChain agent for career analysis
-    
-    Returns:
-        Runnable chain that takes query and returns analysis
-    """
-    api_key = os.getenv("GROQ_API_KEY")
-    if not api_key:
-        raise ValueError("GROQ_API_KEY environment variable not set")
-    
-    # Initialize Groq LLM
-    llm = ChatGroq(
-        model="llama-3.3-70b-versatile",
-        groq_api_key=api_key,
-        temperature=0.7,  # Balanced creativity and consistency
-    )
-    
-    # Create prompt template
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", """You are an expert Career Assistant helping professionals advance their careers.
-
-Provide comprehensive, actionable advice covering:
-1. Job Search Strategy - Specific companies, platforms, and keywords
-2. Skill Gap Analysis - Technical and soft skills to develop
-3. Project Ideas - Portfolio projects that demonstrate relevant skills
-4. GitHub Profile Review - Improvements to showcase work effectively
-
-Be specific, realistic, and encouraging."""),
-        ("human", "{query}")
-    ])
-    
-    # Build the chain: prompt -> LLM -> string output
-    chain = prompt | llm | StrOutputParser()
-    
-    # Add input schema for LangServe compatibility
-    chain = chain.with_types(input_type=PlaygroundInput)
-    
-    return chain
-
-
-# ============================================================================
-# LANGSERVE PLAYGROUND (Optional Testing Interface)
-# ============================================================================
-
-try:
-    career_chain = create_agent()
-    
-    add_routes(
-        app,
-        career_chain,
-        path="/agent",
-        enabled_endpoints=["invoke", "stream", "playground"],
-    )
-    print("✅ LangServe playground available at /agent/playground")
-except Exception as e:
-    print(f"⚠️  Warning: LangServe routes not added: {e}")
-
-
-# ============================================================================
-# STATIC FILES (Custom Frontend)
-# ============================================================================
-
-# Serve HTML/CSS/JS from static/ directory
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
@@ -139,7 +61,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 def home():
-    """Serve the custom minimal frontend"""
+    """Serve the custom frontend"""
     return FileResponse("static/index.html")
 
 
@@ -147,28 +69,26 @@ def home():
 def health():
     """Health check endpoint"""
     api_key = os.getenv("GROQ_API_KEY")
+    github_token = os.getenv("GITHUB_TOKEN")
+    
     return {
         "status": "healthy",
-        "version": "5.2.0",
-        "api_key_configured": bool(api_key),
+        "version": "6.0.0",
+        "groq_api_key": bool(api_key),
+        "github_token": bool(github_token),
         "model": "llama-3.3-70b-versatile",
-        "provider": "Groq"
+        "agent_type": "AgentExecutor with 4 Tools",
+        "tools": [
+            "job_search_advisor",
+            "skill_gap_analyzer", 
+            "project_idea_generator",
+            "github_profile_analyzer"
+        ]
     }
 
 
 def extract_text_from_pdf(pdf_file: bytes) -> str:
-    """
-    Extract text content from PDF file
-    
-    Args:
-        pdf_file: PDF file as bytes
-        
-    Returns:
-        Extracted text as string
-        
-    Raises:
-        HTTPException: If PDF extraction fails
-    """
+    """Extract text from PDF file"""
     try:
         pdf_reader = PyPDF2.PdfReader(BytesIO(pdf_file))
         text = ""
@@ -177,71 +97,61 @@ def extract_text_from_pdf(pdf_file: bytes) -> str:
         return text.strip()
     except Exception as e:
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail=f"Failed to extract PDF text: {str(e)}"
         )
 
 
 @app.post("/analyze")
-async def analyze_career(
+async def analyze_career_endpoint(
     resume: UploadFile = File(..., description="Resume in PDF format"),
     target_role: str = Form(..., description="Desired job role"),
     github_username: str = Form(..., description="GitHub username")
 ):
     """
-    Main endpoint for career analysis
+    Main endpoint for career analysis using AgentExecutor with 4 tools
     
-    Accepts:
-        - resume: PDF file upload
-        - target_role: Target job position
-        - github_username: GitHub username for profile review
+    The agent will:
+    1. Call job_search_advisor tool
+    2. Call skill_gap_analyzer tool
+    3. Call project_idea_generator tool
+    4. Call github_profile_analyzer tool (with GitHub API)
+    5. Synthesize results into comprehensive report
     
     Returns:
-        JSON with 4 sections: job_search, skill_gaps, project_ideas, github_summary
+        JSON with 4 sections and metadata
     """
     try:
         # Validate file type
         if not resume.filename.endswith('.pdf'):
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail="Only PDF files are supported"
             )
         
-        # Read and extract text from PDF
+        # Extract text from PDF
         pdf_bytes = await resume.read()
         resume_text = extract_text_from_pdf(pdf_bytes)
         
         if not resume_text:
             raise HTTPException(
-                status_code=400, 
-                detail="Could not extract text from PDF. Please check the file."
+                status_code=400,
+                detail="Could not extract text from PDF"
             )
         
-        # Create agent and generate analysis
-        agent = create_agent()
+        # Run agent with tools
+        print(f"🤖 Running AgentExecutor for {target_role}...")
+        result = analyze_career(resume_text, target_role, github_username)
         
-        # Construct detailed query
-        query = f"""
-Analyze this career profile:
-
-**Target Role:** {target_role}
-**GitHub Username:** {github_username}
-**Resume Summary:** {resume_text[:1000]}...
-
-Provide detailed advice in these 4 sections:
-1. Job Search Strategy
-2. Skill Gap Analysis
-3. Project Ideas
-4. GitHub Profile Review
-
-Be specific and actionable.
-"""
+        if result["status"] != "success":
+            raise HTTPException(
+                status_code=500,
+                detail=f"Agent execution failed: {result.get('error')}"
+            )
         
-        # Get LLM response
-        result = agent.invoke({"query": query})
-        
-        # Parse response into sections
-        sections = parse_response_sections(result)
+        # Parse analysis into sections
+        analysis_text = result["analysis"]
+        sections = parse_analysis_sections(analysis_text)
         
         return {
             "status": "success",
@@ -251,7 +161,9 @@ Be specific and actionable.
             "skill_gaps": sections["skill_gaps"],
             "project_ideas": sections["project_ideas"],
             "github_summary": sections["github_summary"],
-            "full_analysis": result
+            "full_analysis": analysis_text,
+            "agent_type": "AgentExecutor",
+            "tools_used": 4
         }
         
     except HTTPException:
@@ -262,92 +174,74 @@ Be specific and actionable.
         print(traceback.format_exc())
         
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"Analysis failed: {error_detail}"
         )
-
-
-def parse_response_sections(result: str) -> dict:
-    """
-    Parse LLM response into 4 sections
-    
-    Looks for numbered sections (1., 2., 3., 4.) and splits accordingly.
-    If parsing fails, returns full text in job_search section.
-    """
-    sections = {
-        "job_search": "",
-        "skill_gaps": "",
-        "project_ideas": "",
-        "github_summary": ""
-    }
-    
-    # Try to split by numbered sections
-    if "1." in result and "2." in result:
-        parts = result.split("1.")
-        if len(parts) > 1:
-            rest = parts[1]
-            sections_parts = rest.split("2.")
-            if len(sections_parts) > 1:
-                sections["job_search"] = "1." + sections_parts[0].strip()
-                rest2 = sections_parts[1]
-                sections_parts2 = rest2.split("3.")
-                if len(sections_parts2) > 1:
-                    sections["skill_gaps"] = "2." + sections_parts2[0].strip()
-                    rest3 = sections_parts2[1]
-                    sections_parts3 = rest3.split("4.")
-                    if len(sections_parts3) > 1:
-                        sections["project_ideas"] = "3." + sections_parts3[0].strip()
-                        sections["github_summary"] = "4." + sections_parts3[1].strip()
-    
-    # Fallback: if parsing failed, put everything in job_search
-    if not sections["job_search"]:
-        sections["job_search"] = result
-        sections["skill_gaps"] = "See full analysis above"
-        sections["project_ideas"] = "See full analysis above"
-        sections["github_summary"] = "See full analysis above"
-    
-    return sections
 
 
 @app.post("/analyze-json")
 async def analyze_json(request: CareerRequest):
     """
-    Legacy JSON endpoint for career analysis
-    
-    Accepts JSON payload instead of file upload.
-    Maintained for backward compatibility.
+    Legacy JSON endpoint
     """
     try:
-        agent = create_agent()
+        result = analyze_career(
+            request.resume_text,
+            request.target_role,
+            request.github_username
+        )
         
-        query = f"""
-Analyze this career profile:
-
-**Target Role:** {request.target_role}
-**GitHub Username:** {request.github_username}
-**Resume:** {request.resume_text[:500]}...
-
-Provide job search tips, skill gap analysis, project ideas, and GitHub profile advice.
-"""
-        
-        result = agent.invoke({"query": query})
+        if result["status"] != "success":
+            raise HTTPException(
+                status_code=500,
+                detail=f"Agent execution failed: {result.get('error')}"
+            )
         
         return {
             "status": "success",
             "target_role": request.target_role,
             "github_username": request.github_username,
-            "analysis": result
+            "analysis": result["analysis"],
+            "agent_type": "AgentExecutor"
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         error_detail = f"{type(e).__name__}: {str(e)}"
         print(f"❌ Error in /analyze-json: {error_detail}")
         print(traceback.format_exc())
         
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"Analysis failed: {error_detail}"
         )
+
+
+@app.get("/tools")
+def list_tools():
+    """List all available tools"""
+    return {
+        "tools": [
+            {
+                "name": "job_search_advisor",
+                "description": "Provides personalized job search strategies"
+            },
+            {
+                "name": "skill_gap_analyzer",
+                "description": "Analyzes skill gaps and recommends learning path"
+            },
+            {
+                "name": "project_idea_generator",
+                "description": "Generates portfolio project ideas"
+            },
+            {
+                "name": "github_profile_analyzer",
+                "description": "Analyzes GitHub profile using REST API"
+            }
+        ],
+        "agent_type": "AgentExecutor with tool-calling"
+    }
 
 
 # ============================================================================
@@ -356,4 +250,11 @@ Provide job search tips, skill gap analysis, project ideas, and GitHub profile a
 
 if __name__ == "__main__":
     import uvicorn
+    print("🚀 Starting Career Assistant Agent with AgentExecutor...")
+    print("📦 4 Tools Loaded:")
+    print("   1. job_search_advisor")
+    print("   2. skill_gap_analyzer")
+    print("   3. project_idea_generator")
+    print("   4. github_profile_analyzer (GitHub API)")
+    print()
     uvicorn.run(app, host="0.0.0.0", port=8000)
