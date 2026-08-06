@@ -1,5 +1,5 @@
 """
-FastAPI Career Assistant with detailed error logging
+FastAPI Career Assistant with CORRECT Gemini model
 """
 
 import os
@@ -15,8 +15,8 @@ load_dotenv()
 
 app = FastAPI(
     title="Career Assistant Agent",
-    version="3.1.0",
-    description="Simple Career Assistant using Gemini"
+    version="3.2.0",
+    description="Career Assistant using Gemini Pro"
 )
 
 
@@ -31,15 +31,12 @@ def create_agent():
     if not api_key:
         raise ValueError("GOOGLE_API_KEY environment variable not set")
     
-    print(f"🔑 API Key configured: {api_key[:10]}...")
-    
+    # Use gemini-pro - this DEFINITELY exists!
     llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash-latest",
+        model="gemini-pro",
         google_api_key=api_key,
         temperature=0.7,
     )
-    
-    print("✅ LLM initialized")
     
     prompt = ChatPromptTemplate.from_messages([
         ("system", "You are a Career Assistant. Provide job search tips, skill analysis, project ideas, and GitHub advice."),
@@ -53,8 +50,8 @@ def create_agent():
 def home():
     return {
         "message": "Career Assistant API",
-        "version": "3.1.0",
-        "model": "gemini-1.5-flash-latest",
+        "version": "3.2.0",
+        "model": "gemini-pro",
         "endpoints": {
             "home": "/",
             "health": "/health",
@@ -69,31 +66,24 @@ def health():
     api_key = os.getenv("GOOGLE_API_KEY")
     return {
         "status": "healthy",
-        "api_key_set": bool(api_key),
-        "api_key_length": len(api_key) if api_key else 0
+        "api_key_set": bool(api_key)
     }
 
 
 @app.post("/analyze")
 async def analyze(request: CareerRequest):
-    print(f"📨 Received request for role: {request.target_role}")
-    
     try:
-        print("🤖 Creating agent...")
         agent = create_agent()
         
         query = f"""
 Target Role: {request.target_role}
 GitHub: {request.github_username}
-Resume: {request.resume_text[:1000]}
+Resume: {request.resume_text[:500]}
 
-Provide: job tips, skill gaps, project ideas, GitHub advice.
+Provide job search tips, skill gap analysis, project ideas, and GitHub profile advice.
 """
         
-        print("🔄 Invoking agent...")
         result = agent.invoke({"query": query})
-        
-        print("✅ Analysis complete")
         
         return {
             "status": "success",
