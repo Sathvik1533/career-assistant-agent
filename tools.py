@@ -176,13 +176,38 @@ def github_profile_analyzer(github_username: str) -> str:
         
         # Get user profile
         user_response = requests.get(user_url, headers=headers, timeout=10)
+        
+        # Handle rate limiting specifically (403 = rate limit exceeded)
+        if user_response.status_code == 403:
+            rate_limit_remaining = user_response.headers.get('X-RateLimit-Remaining', '0')
+            rate_limit_reset = user_response.headers.get('X-RateLimit-Reset', 'unknown')
+            
+            if github_token:
+                return f"⚠️ GitHub API rate limit exceeded even with authentication (5,000/hour limit).\n\nRate limit remaining: {rate_limit_remaining}\nResets at timestamp: {rate_limit_reset}\n\nPlease try again in a few minutes."
+            else:
+                return f"⚠️ GitHub API rate limit exceeded (60 requests/hour without token).\n\n💡 **Solution:** Add a GITHUB_TOKEN environment variable with a Personal Access Token to unlock 5,000 requests/hour.\n\nGet token at: https://github.com/settings/tokens\nRequired scopes: public_repo (read-only)\n\nFor now, please try again in an hour or contact support."
+        
+        # Handle user not found (404)
+        if user_response.status_code == 404:
+            return f"❌ GitHub user '{github_username}' not found. Please check the username is correct and try again."
+        
+        # Handle other errors
         if user_response.status_code != 200:
-            return f"Could not fetch GitHub profile for '{github_username}'. User may not exist or API limit reached."
+            return f"⚠️ Could not fetch GitHub profile for '{github_username}'.\n\nHTTP Status: {user_response.status_code}\nError: {user_response.text[:200]}\n\nPlease try again later."
         
         user_data = user_response.json()
         
         # Get repositories
         repos_response = requests.get(repos_url, headers=headers, timeout=10)
+        
+        # Handle rate limit for repos endpoint too
+        if repos_response.status_code == 403:
+            rate_limit_remaining = repos_response.headers.get('X-RateLimit-Remaining', '0')
+            if github_token:
+                return f"⚠️ GitHub API rate limit exceeded while fetching repositories (authenticated).\n\nRemaining: {rate_limit_remaining}\n\nProfile data was fetched successfully, but repository analysis is unavailable. Please try again later."
+            else:
+                return f"⚠️ GitHub API rate limit exceeded while fetching repositories.\n\n💡 Add GITHUB_TOKEN environment variable for 5,000 requests/hour.\n\nProfile data was fetched, but repository analysis is unavailable."
+        
         repos_data = repos_response.json() if repos_response.status_code == 200 else []
         
         # Extract key information
