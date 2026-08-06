@@ -1,15 +1,40 @@
-fastapi
-uvicorn[standard]
-python-multipart
-langchain
-langchain-core
-langchain-community
-langchain-groq
-PyPDF2
-pdfplumber
-python-dotenv
-requests
-pydantic
-langserve[all]
+# ============================================================================
+# Career Assistant Agent - Python Dependencies
+# ============================================================================
 
-aiofiles
+# Web Framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+
+# File Handling
+python-multipart>=0.0.9
+aiofiles>=24.1.0
+
+# LangChain Core
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+
+# LangChain Groq Integration
+langchain-groq>=0.2.0
+
+# LangServe (Playground UI)
+langserve[all]>=0.3.0
+
+# PDF Processing
+PyPDF2>=3.0.0
+pdfplumber>=0.11.0
+
+# Utilities
+python-dotenv>=1.0.0
+requests>=2.32.0
+pydantic>=2.0.0
+
+# ============================================================================
+# Notes:
+# - All versions are pinned to avoid breaking changes
+# - langchain-groq provides Groq integration
+# - PyPDF2 is used for PDF text extraction
+# - langserve provides the /agent/playground UI
+# - aiofiles enables async file operations
+# ============================================================================
