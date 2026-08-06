@@ -1,30 +1,26 @@
 """
-Career Assistant Agent with Real Tool-Calling Architecture
-Uses LangChain AgentExecutor with 4 specialized tools
+Career Assistant Agent with Real AgentExecutor
+Uses LangChain's create_tool_calling_agent and AgentExecutor for proper runtime loop
 """
 
 import os
-from typing import Dict, Any
+import re
+from typing import Dict, Any, List
 from langchain_groq import ChatGroq
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
-from pydantic import BaseModel, Field
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.agents import create_tool_calling_agent, AgentExecutor
 
 # Import our custom tools
-from tools import career_tools
+try:
+    from tools import career_tools
+except ImportError:
+    print("⚠️  Warning: tools module not found. Make sure tools.py is in the same directory.")
+    career_tools = []
 
 
-class CareerAnalysisInput(BaseModel):
-    """Input schema for career analysis"""
-    resume_text: str = Field(description="Resume content as text")
-    target_role: str = Field(description="Desired job role")
-    github_username: str = Field(description="GitHub username")
-
-
-def create_career_agent():
+def create_career_agent() -> AgentExecutor:
     """
-    Create a tool-calling agent
+    Create a real AgentExecutor with tool-calling runtime loop
     
     The agent has access to 4 specialized tools:
     1. job_search_advisor - Job search strategies
@@ -33,7 +29,7 @@ def create_career_agent():
     4. github_profile_analyzer - GitHub profile review with API
     
     Returns:
-        Configured LLM with tool binding
+        AgentExecutor with tools and runtime loop
     """
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
@@ -46,10 +42,60 @@ def create_career_agent():
         temperature=0.7,
     )
     
-    # Bind tools to LLM
-    llm_with_tools = llm.bind_tools(career_tools)
+    # Create prompt template for agent
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", """You are a Career Assistant Agent with access to 4 specialized tools.
+
+Your role is to provide comprehensive career guidance by:
+1. Analyzing job search strategies for the target role
+2. Identifying skill gaps and learning recommendations
+3. Generating portfolio project ideas
+4. Reviewing GitHub profile and suggesting improvements
+
+**Available Tools:**
+- job_search_advisor: Get personalized job search strategies
+- skill_gap_analyzer: Analyze skill gaps and learning path
+- project_idea_generator: Generate portfolio project ideas
+- github_profile_analyzer: Analyze GitHub profile using REST API
+
+**Instructions:**
+1. Use ALL 4 tools to gather comprehensive information
+2. Call each tool with appropriate parameters (resume_text, target_role, github_username)
+3. After gathering all tool outputs, synthesize them into a well-structured report
+4. Organize the final response with clear sections:
+   - Job Search Strategy
+   - Skill Gap Analysis
+   - Project Ideas
+   - GitHub Profile Review
+
+Be specific, actionable, and professional in your recommendations."""),
+        ("human", """Please analyze my career profile and provide comprehensive guidance.
+
+**Target Role:** {target_role}
+
+**Resume Summary:**
+{resume_text}
+
+**GitHub Username:** {github_username}
+
+Use all 4 tools to gather insights, then provide a complete career analysis report."""),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),
+    ])
     
-    return llm_with_tools
+    # Create tool-calling agent
+    agent = create_tool_calling_agent(llm, career_tools, prompt)
+    
+    # Create AgentExecutor with runtime loop
+    agent_executor = AgentExecutor(
+        agent=agent,
+        tools=career_tools,
+        verbose=True,
+        max_iterations=10,
+        handle_parsing_errors=True,
+        return_intermediate_steps=False
+    )
+    
+    return agent_executor
 
 
 def analyze_career(
@@ -58,7 +104,7 @@ def analyze_career(
     github_username: str
 ) -> Dict[str, Any]:
     """
-    Run comprehensive career analysis using tools
+    Run comprehensive career analysis using AgentExecutor
     
     Args:
         resume_text: Candidate's resume content
@@ -66,74 +112,46 @@ def analyze_career(
         github_username: GitHub username for profile analysis
         
     Returns:
-        Dictionary with analysis results and tool outputs
+        Dictionary with analysis results from agent
     """
     try:
-        # Call each tool directly for now
-        print("🔧 Calling tools...")
+        print("🤖 Initializing AgentExecutor...")
         
-        # Call job search tool
-        print("  1. Job Search Advisor...")
-        from tools import job_search_advisor
-        job_result = job_search_advisor.invoke({
-            "resume_text": resume_text[:800],
-            "target_role": target_role
-        })
+        # Create agent executor
+        agent_executor = create_career_agent()
         
-        # Call skill gap tool
-        print("  2. Skill Gap Analyzer...")
-        from tools import skill_gap_analyzer
-        skill_result = skill_gap_analyzer.invoke({
-            "resume_text": resume_text[:800],
-            "target_role": target_role
-        })
+        print("🔧 Running agent with tool-calling runtime loop...")
         
-        # Call project ideas tool
-        print("  3. Project Idea Generator...")
-        from tools import project_idea_generator
-        project_result = project_idea_generator.invoke({
-            "resume_text": resume_text[:800],
-            "target_role": target_role
-        })
-        
-        # Call GitHub tool
-        print("  4. GitHub Profile Analyzer...")
-        from tools import github_profile_analyzer
-        github_result = github_profile_analyzer.invoke({
+        # Execute agent with inputs
+        result = agent_executor.invoke({
+            "resume_text": resume_text[:800],  # Limit resume length
+            "target_role": target_role,
             "github_username": github_username
         })
         
-        # Combine results
-        full_analysis = f"""# Career Analysis Report
-
-## 1. Job Search Strategy
-{job_result}
-
-## 2. Skill Gap Analysis
-{skill_result}
-
-## 3. Project Ideas
-{project_result}
-
-## 4. GitHub Profile Review
-{github_result}
-"""
+        # Extract output from agent result
+        analysis = result.get("output", "")
+        
+        print("✅ Agent execution complete!")
         
         return {
             "status": "success",
             "target_role": target_role,
             "github_username": github_username,
-            "analysis": full_analysis,
+            "analysis": analysis,
+            "agent_type": "AgentExecutor",
             "tool_based": True
         }
         
     except Exception as e:
         import traceback
-        print(f"❌ Error: {e}")
+        print(f"❌ Agent Error: {e}")
         print(traceback.format_exc())
+        
         return {
             "status": "error",
             "error": str(e),
+            "traceback": traceback.format_exc(),
             "target_role": target_role,
             "github_username": github_username
         }
@@ -141,7 +159,7 @@ def analyze_career(
 
 def parse_analysis_sections(analysis_text: str) -> Dict[str, str]:
     """
-    Parse agent output into 4 sections
+    Parse agent output into 4 sections using more robust parsing
     
     Args:
         analysis_text: Complete analysis from agent
@@ -149,6 +167,8 @@ def parse_analysis_sections(analysis_text: str) -> Dict[str, str]:
     Returns:
         Dictionary with 4 sections: job_search, skill_gaps, project_ideas, github_summary
     """
+    import re
+    
     sections = {
         "job_search": "",
         "skill_gaps": "",
@@ -156,35 +176,43 @@ def parse_analysis_sections(analysis_text: str) -> Dict[str, str]:
         "github_summary": ""
     }
     
-    # Split by markdown headers
-    if "## 1. Job Search" in analysis_text:
-        parts = analysis_text.split("## 1. Job Search")
-        if len(parts) > 1:
-            rest = parts[1]
-            if "## 2. Skill Gap" in rest:
-                skill_parts = rest.split("## 2. Skill Gap")
-                sections["job_search"] = skill_parts[0].strip()
-                
-                if len(skill_parts) > 1:
-                    rest2 = skill_parts[1]
-                    if "## 3. Project" in rest2:
-                        project_parts = rest2.split("## 3. Project")
-                        sections["skill_gaps"] = project_parts[0].strip()
-                        
-                        if len(project_parts) > 1:
-                            rest3 = project_parts[1]
-                            if "## 4. GitHub" in rest3:
-                                github_parts = rest3.split("## 4. GitHub")
-                                sections["project_ideas"] = github_parts[0].strip()
-                                if len(github_parts) > 1:
-                                    sections["github_summary"] = github_parts[1].strip()
+    # Try multiple header patterns (agent might format differently)
+    patterns = [
+        # Pattern 1: Numbered headers
+        (r"##?\s*1\.?\s*Job Search.*?\n(.*?)(?=##?\s*2|$)", "job_search"),
+        (r"##?\s*2\.?\s*Skill Gap.*?\n(.*?)(?=##?\s*3|$)", "skill_gaps"),
+        (r"##?\s*3\.?\s*Project.*?\n(.*?)(?=##?\s*4|$)", "project_ideas"),
+        (r"##?\s*4\.?\s*GitHub.*?\n(.*?)$", "github_summary"),
+        
+        # Pattern 2: Non-numbered headers
+        (r"##?\s*Job Search.*?\n(.*?)(?=##|$)", "job_search"),
+        (r"##?\s*Skill Gap.*?\n(.*?)(?=##|$)", "skill_gaps"),
+        (r"##?\s*Project.*?\n(.*?)(?=##|$)", "project_ideas"),
+        (r"##?\s*GitHub.*?\n(.*?)$", "github_summary"),
+    ]
     
-    # Fallback
-    if not sections["job_search"]:
-        sections["job_search"] = analysis_text
-        sections["skill_gaps"] = "See full analysis above"
-        sections["project_ideas"] = "See full analysis above"
-        sections["github_summary"] = "See full analysis above"
+    # Try to extract each section
+    for pattern, key in patterns:
+        if not sections[key]:  # Only if not already found
+            match = re.search(pattern, analysis_text, re.IGNORECASE | re.DOTALL)
+            if match:
+                sections[key] = match.group(1).strip()
+    
+    # Fallback: if sections are still empty, try to split the analysis
+    if not any(sections.values()):
+        # Split by double newlines and take chunks
+        chunks = [chunk.strip() for chunk in analysis_text.split('\n\n') if chunk.strip()]
+        if len(chunks) >= 4:
+            sections["job_search"] = chunks[0]
+            sections["skill_gaps"] = chunks[1] if len(chunks) > 1 else ""
+            sections["project_ideas"] = chunks[2] if len(chunks) > 2 else ""
+            sections["github_summary"] = chunks[3] if len(chunks) > 3 else ""
+        else:
+            # Last resort: put everything in job_search
+            sections["job_search"] = analysis_text
+            sections["skill_gaps"] = "See comprehensive analysis above"
+            sections["project_ideas"] = "See comprehensive analysis above"
+            sections["github_summary"] = "See comprehensive analysis above"
     
     return sections
 
@@ -194,8 +222,8 @@ def parse_analysis_sections(analysis_text: str) -> Dict[str, str]:
 # ============================================================================
 
 def test_agent():
-    """Test the agent with sample data"""
-    print("🧪 Testing Career Assistant with Tools...\n")
+    """Test the AgentExecutor with sample data"""
+    print("🧪 Testing Career Assistant AgentExecutor...\n")
     
     resume_text = """
     Software Engineer with 2 years of experience in Python and JavaScript.
@@ -215,15 +243,26 @@ def test_agent():
         result = analyze_career(resume_text, target_role, github_username)
         
         if result["status"] == "success":
-            print("\n✅ Analysis Complete!\n")
+            print("\n✅ Agent Analysis Complete!\n")
             print("="*60)
-            print(result["analysis"][:500])
+            print(f"Agent Type: {result.get('agent_type', 'Unknown')}")
             print("="*60)
+            print(result["analysis"][:800])
+            print("="*60)
+            
+            # Test section parsing
+            print("\n📊 Testing Section Parsing...")
+            sections = parse_analysis_sections(result["analysis"])
+            for key, value in sections.items():
+                print(f"\n{key.upper()}: {len(value)} chars")
         else:
             print(f"❌ Error: {result.get('error')}")
+            print(f"Traceback: {result.get('traceback')}")
             
     except Exception as e:
+        import traceback
         print(f"❌ Test failed: {e}")
+        print(traceback.format_exc())
 
 
 if __name__ == "__main__":
