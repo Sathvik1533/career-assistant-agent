@@ -9,14 +9,14 @@ Four tools for the Career Assistant Agent:
 import os
 import requests
 from langchain.tools import tool
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from typing import Dict, List
 
 # Initialize LLM for tools that need it
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-llm = ChatGoogleGenerativeAI(
-    model="models/gemma-4-31b-it",
-    google_api_key=GOOGLE_API_KEY,
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",
+    groq_api_key=GROQ_API_KEY,
     temperature=0.7
 )
 
