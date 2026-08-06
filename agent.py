@@ -124,52 +124,61 @@ Be specific, actionable, and professional."""
 
 
 def parse_analysis_sections(analysis_text: str) -> Dict[str, str]:
-    """
-    Parse agent output into 4 sections using robust parsing
-    
-    Args:
-        analysis_text: Complete analysis from agent
-        
-    Returns:
-        Dictionary with 4 sections
-    """
-    import re
-    
     sections = {
-        "job_search": "",
-        "skill_gaps": "",
-        "project_ideas": "",
-        "github_summary": ""
+        "job_search": "No job search data available.",
+        "skill_gaps": "No skill gap data available.",
+        "project_ideas": "No project ideas available.",
+        "github_summary": "No GitHub analysis available."
     }
     
-    # Try multiple header patterns
-    patterns = [
-        (r"##?\s*1\.?\s*Job Search.*?\n(.*?)(?=##?\s*2|$)", "job_search"),
-        (r"##?\s*2\.?\s*Skill Gap.*?\n(.*?)(?=##?\s*3|$)", "skill_gaps"),
-        (r"##?\s*3\.?\s*Project.*?\n(.*?)(?=##?\s*4|$)", "project_ideas"),
-        (r"##?\s*4\.?\s*GitHub.*?\n(.*?)$", "github_summary"),
+    # Clean text fallback if markers are completely missed
+    import re
+    
+    # Split text dynamically based on the numbering format (e.g., ## 1., ## 2.)
+    parts = re.split(r'##\s*\d+\.\s*[^#\n]+', analysis_text)
+    
+    # Simple direct keyword extraction block
+    text_lower = analysis_text.lower()
+    
+    # Helper to pull sections based on standard keywords
+    markers = [
+        ("job search", ["## 1", "job search"]),
+        ("skill_gaps", ["## 2", "skill gap"]),
+        ("project_ideas", ["## 3", "project"]),
+        ("github_summary", ["## 4", "github"])
     ]
     
-    # Try to extract each section
-    for pattern, key in patterns:
-        if not sections[key]:
-            match = re.search(pattern, analysis_text, re.IGNORECASE | re.DOTALL)
-            if match:
-                sections[key] = match.group(1).strip()
+    # If the standard markdown structure failed to parse cleanly,
+    # parse by keyword ranges so content is never blank
+    lines = analysis_text.split('\n')
+    current_section = None
+    section_content = {m[0]: [] for m in markers}
     
-    # Fallback: split by double newlines
-    if not any(sections.values()):
-        chunks = [chunk.strip() for chunk in analysis_text.split('\n\n') if chunk.strip()]
-        if len(chunks) >= 4:
-            sections["job_search"] = chunks[0]
-            sections["skill_gaps"] = chunks[1] if len(chunks) > 1 else ""
-            sections["project_ideas"] = chunks[2] if len(chunks) > 2 else ""
-            sections["github_summary"] = chunks[3] if len(chunks) > 3 else ""
-        else:
-            sections["job_search"] = analysis_text
-            sections["skill_gaps"] = "See comprehensive analysis above"
-            sections["project_ideas"] = "See comprehensive analysis above"
-            sections["github_summary"] = "See comprehensive analysis above"
+    for line in lines:
+        line_lower = line.lower()
+        if "1. job search" in line_lower or "## 1" in line_lower:
+            current_section = "job_search"
+            continue
+        elif "2. skill gap" in line_lower or "## 2" in line_lower:
+            current_section = "skill_gaps"
+            continue
+        elif "3. project" in line_lower or "## 3" in line_lower:
+            current_section = "project_ideas"
+            continue
+        elif "4. github" in line_lower or "## 4" in line_lower:
+            current_section = "github_summary"
+            continue
+        
+        if current_section:
+            section_content[current_section].append(line)
+    
+    for key in sections.keys():
+        if section_content[key]:
+            sections[key] = "\n".join(section_content[key]).strip()
+    
+    # Absolute failsafe: if everything is empty, dump full analysis into section 1
+    if not any(section_content.values()):
+        sections["job_search"] = analysis_text
     
     return sections
 
