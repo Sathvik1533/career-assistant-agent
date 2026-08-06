@@ -1,37 +1,44 @@
 """
-FastAPI Career Assistant using GROQ (much better than Gemini!)
+FastAPI Career Assistant with Groq + LangServe Playground
 """
 
 import os
 import traceback
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langserve import add_routes
 
 load_dotenv()
 
 app = FastAPI(
     title="Career Assistant Agent",
-    version="4.0.0",
-    description="Career Assistant using Groq (llama-3.3-70b)"
+    version="4.1.0",
+    description="Career Assistant using Groq with LangServe Playground"
 )
 
 
+# Pydantic models
 class CareerRequest(BaseModel):
     resume_text: str
     target_role: str
     github_username: str
 
 
+class PlaygroundInput(BaseModel):
+    """Input for LangServe playground"""
+    query: str = Field(description="Career analysis query with resume, role, and GitHub username")
+
+
 def create_agent():
+    """Create Groq-powered agent chain"""
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise ValueError("GROQ_API_KEY environment variable not set")
     
-    # Use Groq with Llama 3.3 70B - FAST and RELIABLE!
     llm = ChatGroq(
         model="llama-3.3-70b-versatile",
         groq_api_key=api_key,
@@ -43,19 +50,49 @@ def create_agent():
         ("human", "{query}")
     ])
     
-    return prompt | llm | StrOutputParser()
+    chain = prompt | llm | StrOutputParser()
+    
+    # Add input schema for LangServe
+    chain = chain.with_types(input_type=PlaygroundInput)
+    
+    return chain
 
+
+# =============================================================================
+# LANGSERVE PLAYGROUND
+# =============================================================================
+
+try:
+    career_chain = create_agent()
+    
+    add_routes(
+        app,
+        career_chain,
+        path="/agent",
+        enabled_endpoints=["invoke", "stream", "playground"],
+    )
+    print("✅ LangServe playground added at /agent/playground")
+except Exception as e:
+    print(f"⚠️  Warning: Could not add LangServe routes: {e}")
+
+
+# =============================================================================
+# REST API ENDPOINTS
+# =============================================================================
 
 @app.get("/")
 def home():
     return {
-        "message": "Career Assistant API",
-        "version": "4.0.0",
+        "message": "Career Assistant API with Groq",
+        "version": "4.1.0",
         "model": "Groq Llama 3.3 70B",
         "endpoints": {
             "home": "/",
             "health": "/health",
-            "analyze": "/analyze (POST)",
+            "analyze": "/analyze (POST - JSON)",
+            "playground": "/agent/playground (Interactive UI)",
+            "invoke": "/agent/invoke (POST - LangServe)",
+            "stream": "/agent/stream (POST - LangServe)",
             "docs": "/docs"
         }
     }
@@ -73,6 +110,7 @@ def health():
 
 @app.post("/analyze")
 async def analyze(request: CareerRequest):
+    """REST API endpoint for career analysis"""
     try:
         agent = create_agent()
         
