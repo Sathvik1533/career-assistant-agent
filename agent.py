@@ -8,7 +8,8 @@ import re
 from typing import Dict, Any, List
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.agents import AgentExecutor, create_openai_tools_agent
+from langchain.agents import create_openai_tools_agent
+from langchain_core.agents import AgentExecutor
 
 # Import our custom tools
 try:
