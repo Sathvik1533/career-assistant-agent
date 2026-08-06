@@ -34,8 +34,8 @@ Input: Resume PDF + Target Role + GitHub ID
                     ↓
          ┌──────────────────────┐
          │  LangGraph Agent     │
-         │  Gemma 4 31B Model   │
-         │  (models/gemma-4-31b-it)
+         │  Groq Llama 3.3 70B Model   │
+         │  (models/groq-4-31b-it)
          └──────────┬───────────┘
                     │
       ┌─────────────┴─────────────┬──────────────┐
@@ -61,7 +61,7 @@ Input: Resume PDF + Target Role + GitHub ID
 
 Visit: https://makersuite.google.com/app/apikey
 
-Get a Google API key (free tier available)
+Get a Groq API key (free tier available)
 
 ### 2. Local Setup
 
@@ -78,7 +78,7 @@ pip install -r requirements.txt
 
 # Set up environment
 cp .env.example .env
-# Edit .env and add your GOOGLE_API_KEY
+# Edit .env and add your GROQ_API_KEY
 ```
 
 ### 3. Test Locally
@@ -111,7 +111,7 @@ uvicorn app:app --reload
 1. Go to https://render.com
 2. New Web Service
 3. Connect repo: `Sathvik1533/career-assistant-agent`
-4. Add environment variable: `GOOGLE_API_KEY`
+4. Add environment variable: `GROQ_API_KEY`
 5. Deploy!
 
 ---
@@ -131,7 +131,7 @@ uvicorn app:app --reload
 
 Required:
 ```
-GOOGLE_API_KEY=your_api_key_here
+GROQ_API_KEY=your_api_key_here
 ```
 
 Optional (for higher GitHub API limits):
@@ -146,13 +146,13 @@ GITHUB_TOKEN=your_github_token_here
 ### To Change Model:
 Edit `agent.py` and `tools.py`, line with:
 ```python
-model="models/gemma-4-31b-it"
+model="models/groq-4-31b-it"
 ```
 
 Change to:
-- `gemini-2.0-flash-exp` (faster)
-- `gemini-1.5-pro` (more capable)
-- `models/gemma-2-27b-it` (smaller)
+- `groq-2.0-flash-exp` (faster)
+- `groq-1.5-pro` (more capable)
+- `models/groq-2-27b-it` (smaller)
 
 ### To Add Tools:
 1. Add tool function in `tools.py`
@@ -203,13 +203,13 @@ curl http://localhost:8000/health
 pip install -r requirements.txt
 ```
 
-### "GOOGLE_API_KEY not found"
+### "GROQ_API_KEY not found"
 ```bash
 # Check .env file
 cat .env
 
 # Load manually for testing
-export GOOGLE_API_KEY=your_key_here
+export GROQ_API_KEY=your_key_here
 ```
 
 ### "PDF extraction failed"
@@ -218,7 +218,7 @@ export GOOGLE_API_KEY=your_key_here
 
 ### "Model not found"
 - Check API key is valid
-- Try alternative model: `gemini-2.0-flash-exp`
+- Try alternative model: `groq-2.0-flash-exp`
 
 ---
 
@@ -227,7 +227,7 @@ export GOOGLE_API_KEY=your_key_here
 ✅ Single intelligent agent (not multiple separate agents)  
 ✅ 4 specialized tools with clear purposes  
 ✅ LangGraph orchestration for proper flow control  
-✅ Gemma 4 31B model (you specified this!)  
+✅ Groq Llama 3.3 70B model (you specified this!)  
 ✅ Validation step (ensures all tools executed properly)  
 ✅ Synthesis step (combines outputs into final report)  
 ✅ PDF resume parsing  
@@ -243,7 +243,7 @@ export GOOGLE_API_KEY=your_key_here
 
 From your diagram:
 - ✅ Single LangGraph agent (not 4 separate agents)
-- ✅ Gemma 4 model (using `models/gemma-4-31b-it`)
+- ✅ Groq 4 model (using `models/groq-4-31b-it`)
 - ✅ 4 tools: job search, skill gap, projects, GitHub
 - ✅ Input: resume PDF, target role, GitHub ID
 - ✅ Validation step before synthesis

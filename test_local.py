@@ -27,8 +27,8 @@ def main():
     args = parser.parse_args()
     
     # Validate API key
-    if not os.getenv("GOOGLE_API_KEY"):
-        print("❌ ERROR: GOOGLE_API_KEY not found in environment")
+    if not os.getenv("GROQ_API_KEY"):
+        print("❌ ERROR: GROQ_API_KEY not found in environment")
         print("Please create a .env file with your API key")
         return
     

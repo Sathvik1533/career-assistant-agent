@@ -10,7 +10,7 @@ This guide walks you through setting up and running the Career Assistant Agent l
 
 A complete LangGraph agent project with:
 - ✅ 11 files pushed to GitHub
-- ✅ Single agent using Gemma 4 31B model
+- ✅ Single agent using Groq Llama 3.3 70B model
 - ✅ 4 specialized tools (job search, skill gap, projects, GitHub)
 - ✅ Validation and synthesis pipeline
 - ✅ FastAPI web server
@@ -49,7 +49,7 @@ pip install -r requirements.txt
 
 This will install:
 - LangGraph & LangChain
-- langchain-google-genai (for Gemma model)
+- langchain-groq (for Groq model)
 - FastAPI & Uvicorn
 - PDF processing libraries
 - All utilities
@@ -66,11 +66,11 @@ nano .env  # or use VS Code: code .env
 
 Add your API key:
 ```
-GOOGLE_API_KEY=your_actual_google_api_key_here
+GROQ_API_KEY=your_actual_groq_api_key_here
 GITHUB_TOKEN=your_github_token_here  # optional
 ```
 
-**Get Google API Key**: https://makersuite.google.com/app/apikey
+**Get Groq API Key**: https://makersuite.google.com/app/apikey
 
 ---
 
@@ -189,7 +189,7 @@ Render will auto-detect `render.yaml` settings:
 In Render dashboard, add:
 
 ```
-GOOGLE_API_KEY = your_actual_google_api_key_here
+GROQ_API_KEY = your_actual_groq_api_key_here
 GITHUB_TOKEN = your_github_token_here (optional)
 ```
 
@@ -243,13 +243,13 @@ Test the `/analyze` endpoint with your resume!
 Edit `agent.py` and `tools.py`:
 
 ```python
-# Current: Gemma 4 31B
-model="models/gemma-4-31b-it"
+# Current: Groq Llama 3.3 70B
+model="models/groq-4-31b-it"
 
 # Alternatives:
-model="gemini-2.0-flash-exp"  # Faster
-model="gemini-1.5-pro"         # Most capable
-model="models/gemma-2-27b-it"  # Smaller Gemma
+model="groq-2.0-flash-exp"  # Faster
+model="groq-1.5-pro"         # Most capable
+model="models/groq-2-27b-it"  # Smaller Groq
 ```
 
 ### Add More Tools
@@ -288,7 +288,7 @@ By default, uses LLM to simulate search. For real search:
 
 ## 🐛 Troubleshooting
 
-### "GOOGLE_API_KEY not found"
+### "GROQ_API_KEY not found"
 
 Solution:
 ```bash
@@ -299,7 +299,7 @@ ls -la .env
 cat .env
 
 # Make sure it's loaded
-python -c "import os; from dotenv import load_dotenv; load_dotenv(); print(os.getenv('GOOGLE_API_KEY'))"
+python -c "import os; from dotenv import load_dotenv; load_dotenv(); print(os.getenv('GROQ_API_KEY'))"
 ```
 
 ### "PDF extraction failed"
@@ -309,12 +309,12 @@ Solutions:
 - Try: `pip install --upgrade pdfplumber`
 - Test with different PDF
 
-### "Model not found: gemma-4-31b-it"
+### "Model not found: groq-4-31b-it"
 
 Solutions:
-- Verify API key has access to Gemma models
-- Try alternative: `gemini-2.0-flash-exp`
-- Check Google AI Studio for available models
+- Verify API key has access to Groq models
+- Try alternative: `groq-2.0-flash-exp`
+- Check Groq Console for available models
 
 ### "Tool execution timeout"
 
@@ -328,7 +328,7 @@ Solutions:
 Solutions:
 - Check build logs in Render dashboard
 - Verify `requirements.txt` is correct
-- Ensure GOOGLE_API_KEY is set in Render
+- Ensure GROQ_API_KEY is set in Render
 - Check Python version (should be 3.11+)
 
 ---
@@ -355,7 +355,7 @@ Local Setup:
 - [ ] Repository cloned
 - [ ] Virtual environment created
 - [ ] Dependencies installed
-- [ ] `.env` file configured with GOOGLE_API_KEY
+- [ ] `.env` file configured with GROQ_API_KEY
 - [ ] Sample resume added to `sample_data/`
 
 Local Testing:
@@ -393,6 +393,6 @@ Deployment:
 
 ---
 
-**Built with ❤️ using LangGraph, LangChain, and Gemma 4 31B**
+**Built with ❤️ using LangGraph, LangChain, and Groq Llama 3.3 70B**
 
 *Good luck with your job search!* 🚀
