@@ -222,22 +222,55 @@ def parse_analysis_sections(analysis_text: str) -> Dict[str, str]:
 # ============================================================================
 
 def test_agent():
-    """Test the AgentExecutor with sample data"""
-    print("🧪 Testing Career Assistant AgentExecutor...\n")
+    """Test the AgentExecutor with dynamic terminal input"""
+    print("🧪 Testing Career Assistant AgentExecutor\n")
+    print("="*60)
+    print("Please provide the following information:")
+    print("="*60)
     
-    resume_text = """
-    Software Engineer with 2 years of experience in Python and JavaScript.
-    Built web applications using React and FastAPI.
-    Familiar with SQL databases and REST APIs.
-    Experience with Git and Docker.
-    """
+    # Get resume text from user
+    print("\n📄 Enter resume summary (press Enter twice when done):")
+    resume_lines = []
+    while True:
+        line = input()
+        if line == "":
+            if resume_lines and resume_lines[-1] == "":
+                break
+            resume_lines.append(line)
+        else:
+            resume_lines.append(line)
     
-    target_role = "Senior Full-Stack Engineer"
-    github_username = "Sathvik1533"
+    resume_text = "\n".join(resume_lines).strip()
     
-    print(f"📄 Resume: {resume_text[:100]}...")
+    # If no resume provided, use sample
+    if not resume_text:
+        print("⚠️  No resume provided, using sample data...")
+        resume_text = """Software Engineer with 2 years of experience in Python and JavaScript.
+Built web applications using React and FastAPI.
+Familiar with SQL databases and REST APIs.
+Experience with Git and Docker."""
+    
+    # Get target role
+    print("\n🎯 Enter target role (e.g., 'Senior Full-Stack Engineer'):")
+    target_role = input().strip()
+    if not target_role:
+        print("⚠️  No role provided, using default: 'Senior Full-Stack Engineer'")
+        target_role = "Senior Full-Stack Engineer"
+    
+    # Get GitHub username
+    print("\n🐙 Enter GitHub username (e.g., 'Sathvik1533'):")
+    github_username = input().strip()
+    if not github_username:
+        print("⚠️  No username provided, using default: 'Sathvik1533'")
+        github_username = "Sathvik1533"
+    
+    print("\n" + "="*60)
+    print("Input Summary:")
+    print("="*60)
+    print(f"📄 Resume: {resume_text[:100]}{'...' if len(resume_text) > 100 else ''}")
     print(f"🎯 Target Role: {target_role}")
-    print(f"🐙 GitHub: {github_username}\n")
+    print(f"🐙 GitHub: {github_username}")
+    print("="*60 + "\n")
     
     try:
         result = analyze_career(resume_text, target_role, github_username)
