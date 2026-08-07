@@ -1,16 +1,59 @@
 """
-Career Assistant Agent - Direct Tool Invocation Approach
-Calls each tool individually and returns structured results
+Career Assistant Agent - Bulletproof Direct Tool Invocation
+Calls each tool individually and returns comprehensive structured results
 """
 
 import os
 from typing import Dict, Any
-from tools import (
-    job_search_advisor,
-    skill_gap_analyzer,
-    project_idea_generator,
-    github_profile_analyzer
-)
+
+
+def parse_analysis_sections(analysis_text: str) -> Dict[str, str]:
+    """
+    Safely extracts blocks from the full analysis string using robust keyword fallback.
+    
+    Args:
+        analysis_text: Raw analysis output text
+        
+    Returns:
+        Dictionary with 4 section keys
+    """
+    sections = {
+        "job_search": "No job search data available.",
+        "skill_gaps": "No skill gap data available.",
+        "project_ideas": "No project ideas available.",
+        "github_summary": "No GitHub analysis available."
+    }
+    
+    lines = analysis_text.split('\n')
+    current_section = None
+    section_content = {k: [] for k in sections.keys()}
+    
+    for line in lines:
+        line_lower = line.lower()
+        if "1. job search" in line_lower or "## 1" in line_lower:
+            current_section = "job_search"
+            continue
+        elif "2. skill gap" in line_lower or "## 2" in line_lower:
+            current_section = "skill_gaps"
+            continue
+        elif "3. project" in line_lower or "## 3" in line_lower:
+            current_section = "project_ideas"
+            continue
+        elif "4. github" in line_lower or "## 4" in line_lower:
+            current_section = "github_summary"
+            continue
+        
+        if current_section:
+            section_content[current_section].append(line)
+    
+    for key in sections.keys():
+        if section_content[key]:
+            sections[key] = "\n".join(section_content[key]).strip()
+    
+    if not any(section_content.values()):
+        sections["job_search"] = analysis_text
+    
+    return sections
 
 
 def analyze_career(
@@ -19,7 +62,7 @@ def analyze_career(
     github_username: str
 ) -> Dict[str, Any]:
     """
-    Run comprehensive career analysis by directly invoking all 4 tools
+    Runs career tool pipelines and compiles a multi-key dictionary to fulfill all API contracts.
     
     Args:
         resume_text: Candidate's resume content
@@ -27,27 +70,35 @@ def analyze_career(
         github_username: GitHub username for profile analysis
         
     Returns:
-        Dictionary with individual tool results under exact frontend keys
+        Dictionary with ALL required keys for both app.py and frontend
     """
     try:
         print("🤖 Invoking career analysis tools...")
         
-        # Call each tool individually
+        # Import tools
+        from tools import (
+            job_search_advisor,
+            skill_gap_analyzer,
+            project_idea_generator,
+            github_profile_analyzer
+        )
+        
+        # Call each tool individually with truncated resume for efficiency
         print("📞 Calling job_search_advisor...")
         job_result = job_search_advisor.invoke({
-            "resume_text": resume_text,
+            "resume_text": resume_text[:800],
             "target_role": target_role
         })
         
         print("📞 Calling skill_gap_analyzer...")
         skill_result = skill_gap_analyzer.invoke({
-            "resume_text": resume_text,
+            "resume_text": resume_text[:800],
             "target_role": target_role
         })
         
         print("📞 Calling project_idea_generator...")
         project_result = project_idea_generator.invoke({
-            "resume_text": resume_text,
+            "resume_text": resume_text[:800],
             "target_role": target_role
         })
         
@@ -58,7 +109,7 @@ def analyze_career(
         
         print("✅ All tools executed successfully!")
         
-        # Stitch all results together into a full report for backward compatibility
+        # Stitch all results together into a full markdown report
         full_report = f"""# Career Analysis Report
 
 ## 1. Job Search Strategy
@@ -73,7 +124,7 @@ def analyze_career(
 ## 4. GitHub Profile Review
 {github_result}"""
         
-        # Return with both 'analysis' key (for compatibility) and individual keys
+        # Enforce all contract keys natively so neither app.py nor script.js can throw a KeyError
         return {
             "status": "success",
             "target_role": target_role,
@@ -91,26 +142,20 @@ def analyze_career(
         print(f"❌ Agent Error: {e}")
         print(traceback.format_exc())
         
+        # Return error structure with all required keys to prevent KeyErrors
+        error_msg = str(e)
         return {
             "status": "error",
-            "error": str(e),
+            "error": error_msg,
             "traceback": traceback.format_exc(),
             "target_role": target_role,
-            "github_username": github_username
+            "github_username": github_username,
+            "analysis": f"An error occurred: {error_msg}",
+            "job_search": "Error running tool.",
+            "skill_gaps": "Error running tool.",
+            "project_ideas": "Error running tool.",
+            "github_summary": "Error running tool."
         }
-
-
-def parse_analysis_sections(analysis_text: str) -> Dict[str, str]:
-    """
-    Legacy function - no longer needed since we return individual tool results
-    Kept for backward compatibility
-    """
-    return {
-        "job_search": analysis_text,
-        "skill_gaps": "See full analysis",
-        "project_ideas": "See full analysis",
-        "github_summary": "See full analysis"
-    }
 
 
 # ============================================================
