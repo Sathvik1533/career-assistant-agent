@@ -76,6 +76,11 @@ form.addEventListener('submit', async (e) => {
     terminalStatus.style.color = '#34d399';
     resultsSection.classList.add('hidden');
     
+    // Reset file input to clear the filename display
+    fileInput.value = '';
+    fileName.textContent = 'No file chosen';
+    fileName.style.color = '#666';
+    
     // Reset file input to blank state
     fileInput.value = '';
     fileName.textContent = 'No file chosen';

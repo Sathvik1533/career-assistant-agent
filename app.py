@@ -18,7 +18,7 @@ import PyPDF2
 from typing import AsyncGenerator
 
 # Import agent with tools
-from agent import create_career_agent, analyze_career, parse_analysis_sections
+from agent import analyze_career
 
 # Load environment variables
 load_dotenv()
@@ -26,7 +26,7 @@ load_dotenv()
 # Initialize FastAPI app
 app = FastAPI(
     title="Career Assistant Agent",
-    version="7.1.1",
+    version="7.2.0",
     description="AI Career Assistant with AgentExecutor, 4 Tools, and Live Status Streaming"
 )
 
@@ -302,20 +302,16 @@ async def analyze_career_endpoint(
                 detail=f"Agent execution failed: {result.get('error')}"
             )
         
-        # Parse analysis into sections
-        analysis_text = result["analysis"]
-        sections = parse_analysis_sections(analysis_text)
-        
+        # Results already structured from analyze_career
         return {
             "status": "success",
             "target_role": target_role,
             "github_username": github_username,
-            "job_search": sections.get("job_search", "No job search data available"),
-            "skill_gaps": sections.get("skill_gaps", "No skill gap data available"),
-            "project_ideas": sections.get("project_ideas", "No project ideas available"),
-            "github_summary": sections.get("github_summary", "No GitHub analysis available"),
-            "full_analysis": analysis_text,
-            "agent_type": "Simple Tool Binding",
+            "job_search": result.get("job_search", "No job search data available"),
+            "skill_gaps": result.get("skill_gaps", "No skill gap data available"),
+            "project_ideas": result.get("project_ideas", "No project ideas available"),
+            "github_summary": result.get("github_summary", "No GitHub analysis available"),
+            "agent_type": "Direct Tool Invocation",
             "tools_used": 4
         }
         
