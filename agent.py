@@ -124,6 +124,15 @@ Be specific, actionable, and professional."""
 
 
 def parse_analysis_sections(analysis_text: str) -> Dict[str, str]:
+    """
+    Parse analysis text into 4 distinct sections with guaranteed non-empty results
+    
+    Args:
+        analysis_text: Raw analysis output from LLM
+        
+    Returns:
+        Dictionary with exactly 4 keys: job_search, skill_gaps, project_ideas, github_summary
+    """
     sections = {
         "job_search": "No job search data available.",
         "skill_gaps": "No skill gap data available.",
@@ -131,47 +140,37 @@ def parse_analysis_sections(analysis_text: str) -> Dict[str, str]:
         "github_summary": "No GitHub analysis available."
     }
     
-    # Clean text fallback if markers are completely missed
-    import re
-    
-    # Split text dynamically based on the numbering format (e.g., ## 1., ## 2.)
-    parts = re.split(r'##\s*\d+\.\s*[^#\n]+', analysis_text)
-    
-    # Simple direct keyword extraction block
-    text_lower = analysis_text.lower()
-    
-    # Helper to pull sections based on standard keywords
-    markers = [
-        ("job search", ["## 1", "job search"]),
-        ("skill_gaps", ["## 2", "skill gap"]),
-        ("project_ideas", ["## 3", "project"]),
-        ("github_summary", ["## 4", "github"])
-    ]
-    
-    # If the standard markdown structure failed to parse cleanly,
-    # parse by keyword ranges so content is never blank
+    # Parse by keyword ranges so content is never blank
     lines = analysis_text.split('\n')
     current_section = None
-    section_content = {m[0]: [] for m in markers}
+    section_content = {
+        "job_search": [],
+        "skill_gaps": [],
+        "project_ideas": [],
+        "github_summary": []
+    }
     
     for line in lines:
         line_lower = line.lower()
-        if "1. job search" in line_lower or "## 1" in line_lower:
+        # Detect section headers with comprehensive keyword matching
+        if "1. job search" in line_lower or "## 1" in line_lower or "job search strategy" in line_lower:
             current_section = "job_search"
             continue
-        elif "2. skill gap" in line_lower or "## 2" in line_lower:
+        elif "2. skill gap" in line_lower or "## 2" in line_lower or "skill gap analysis" in line_lower:
             current_section = "skill_gaps"
             continue
-        elif "3. project" in line_lower or "## 3" in line_lower:
+        elif "3. project" in line_lower or "## 3" in line_lower or "project ideas" in line_lower:
             current_section = "project_ideas"
             continue
-        elif "4. github" in line_lower or "## 4" in line_lower:
+        elif "4. github" in line_lower or "## 4" in line_lower or "github profile" in line_lower:
             current_section = "github_summary"
             continue
         
-        if current_section:
+        # Add content to current section (skip empty lines)
+        if current_section and line.strip():
             section_content[current_section].append(line)
     
+    # Build final sections from collected content
     for key in sections.keys():
         if section_content[key]:
             sections[key] = "\n".join(section_content[key]).strip()
@@ -183,9 +182,9 @@ def parse_analysis_sections(analysis_text: str) -> Dict[str, str]:
     return sections
 
 
-# ============================================================================
+# ============================================================
 # CLI TESTING
-# ============================================================================
+# ============================================================
 
 def test_agent():
     """Test the agent with dynamic terminal input"""
