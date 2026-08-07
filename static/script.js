@@ -1,13 +1,12 @@
 // API Configuration
-const API_BASE_URL = window.location.origin; // Use same origin in production
+const API_BASE_URL = window.location.origin;
 
 // DOM Elements
 const form = document.getElementById('careerForm');
+const fileConsoleBar = document.getElementById('file-console-bar');
 const fileInput = document.getElementById('resume');
-const fileName = document.getElementById('fileName');
-const submitBtn = document.getElementById('submitBtn');
-const submitText = document.getElementById('submitText');
-const submitLoader = document.getElementById('submitLoader');
+const fileStatusText = document.getElementById('file-status-text');
+const analyzeBtn = document.getElementById('analyze-btn');
 const terminalContainer = document.getElementById('terminal-container');
 const terminalLogs = document.getElementById('terminal-logs');
 const terminalStatus = document.getElementById('terminal-status');
@@ -23,15 +22,18 @@ if (typeof marked !== 'undefined') {
     });
 }
 
-// File input change handler
-fileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        fileName.textContent = file.name;
-        fileName.style.color = '#FF6F00';
-    } else {
-        fileName.textContent = 'No file chosen';
-        fileName.style.color = '#666';
+// File console bar interactivity
+fileConsoleBar.addEventListener('click', () => {
+    fileInput.click();
+});
+
+fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) {
+        const name = fileInput.files[0].name;
+        fileStatusText.innerText = `FS_LOADED // LOCAL_PATH: /src/${name}`;
+        fileStatusText.style.color = '#34d399';
+        fileConsoleBar.style.borderColor = '#10b981';
+        fileConsoleBar.style.borderLeftColor = '#10b981';
     }
 });
 
@@ -40,330 +42,154 @@ form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     // Get form data
-    const formData = new FormData();
     const resume = fileInput.files[0];
     const targetRole = document.getElementById('targetRole').value;
     const githubUsername = document.getElementById('githubUsername').value;
     
     // Validation
     if (!resume) {
-        showError('Please upload your resume');
+        alert('⚠️ ERROR: No payload mounted. Please select a resume file.');
         return;
     }
     
     if (resume.type !== 'application/pdf') {
-        showError('Please upload a PDF file');
+        alert('⚠️ ERROR: Invalid payload format. Please upload a PDF file.');
         return;
     }
     
-    if (resume.size > 10 * 1024 * 1024) { // 10MB limit
-        showError('File size must be less than 10MB');
+    if (resume.size > 10 * 1024 * 1024) {
+        alert('⚠️ ERROR: Payload exceeds size limit (10MB)');
         return;
     }
     
     // Prepare form data
+    const formData = new FormData();
     formData.append('resume', resume);
     formData.append('target_role', targetRole);
     formData.append('github_username', githubUsername);
     
-    // Show loading state
-    setLoadingState(true);
-    
-    // Show and initialize terminal
+    // Show terminal and hide results
     terminalContainer.style.display = 'block';
     terminalLogs.innerHTML = '';
     terminalStatus.innerText = 'PROCESSING...';
     terminalStatus.style.color = '#34d399';
     resultsSection.classList.add('hidden');
     
-    // Reset file input to clear the filename display
+    // Reset file input
     fileInput.value = '';
-    fileName.textContent = 'No file chosen';
-    fileName.style.color = '#666';
+    fileStatusText.innerText = 'PATH: (no_payload_allocated)';
+    fileStatusText.style.color = '#475569';
+    fileConsoleBar.style.borderColor = '#1e293b';
+    fileConsoleBar.style.borderLeftColor = '#3b82f6';
     
-    // Reset file input to blank state
-    fileInput.value = '';
-    fileName.textContent = 'No file chosen';
-    fileName.style.color = '#666';
-    
-    // Scroll to terminal
-    setTimeout(() => {
-        terminalContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
+    // Disable button
+    analyzeBtn.disabled = true;
+    analyzeBtn.innerText = 'EXECUTING...';
     
     try {
-        // Use SSE endpoint for live streaming
-        await streamAnalysis(formData);
+        // Create EventSource for SSE
+        const eventSource = new EventSource(
+            `${API_BASE_URL}/analyze-stream?` + 
+            `target_role=${encodeURIComponent(targetRole)}&` +
+            `github_username=${encodeURIComponent(githubUsername)}`
+        );
         
-    } catch (error) {
-        console.error('Error:', error);
-        addTerminalLog(`❌ Error: ${error.message}`, '#e06c75');
-        terminalStatus.innerText = 'ERROR';
-        terminalStatus.style.color = '#e06c75';
-        showError(error.message || 'Failed to analyze. Please try again.');
-        setLoadingState(false);
-    }
-});
-
-// Stream analysis with Server-Sent Events
-async function streamAnalysis(formData) {
-    return new Promise((resolve, reject) => {
-        // Create SSE connection
-        const url = `${API_BASE_URL}/analyze-stream`;
-        
-        fetch(url, {
+        // Use fetch to upload file first
+        const response = await fetch(`${API_BASE_URL}/analyze-stream`, {
             method: 'POST',
             body: formData
-        })
-        .then(async response => {
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || `Server error: ${response.status}`);
-            }
+        });
+        
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
             
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
             
-            // Read stream
-            while (true) {
-                const { done, value } = await reader.read();
-                
-                if (done) break;
-                
-                // Decode chunk
-                buffer += decoder.decode(value, { stream: true });
-                
-                // Process complete messages
-                const lines = buffer.split('\n\n');
-                buffer = lines.pop(); // Keep incomplete message in buffer
-                
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    try {
                         const data = JSON.parse(line.slice(6));
-                        handleStreamMessage(data);
                         
-                        // Check if done
                         if (data.status === 'done') {
-                            setLoadingState(false);
+                            // Analysis complete - show results
+                            terminalStatus.innerText = 'COMPLETE';
+                            terminalStatus.style.color = '#60a5fa';
                             
-                            if (data.error) {
-                                reject(new Error(data.error));
-                            } else if (data.data) {
-                                // Mark as complete
-                                terminalStatus.innerText = 'COMPLETE';
-                                terminalStatus.style.color = '#60a5fa';
-                                
-                                const successLine = document.createElement('div');
-                                successLine.innerText = "✅ [Complete] Structured response verified. Displaying report below.";
-                                successLine.style.color = "#60a5fa";
-                                successLine.style.marginTop = "8px";
-                                terminalLogs.appendChild(successLine);
-                                
-                                // Scroll to show success line
-                                terminalLogs.scrollTop = terminalLogs.scrollHeight;
-                                
-                                // Display results after short delay
-                                setTimeout(() => {
-                                    displayResults(data.data);
-                                }, 500);
-                                
-                                resolve();
+                            // Add completion log
+                            const completionLog = document.createElement('div');
+                            completionLog.className = 'log-line';
+                            completionLog.style.color = '#34d399';
+                            completionLog.innerHTML = '✅ [Complete] Structured response verified and transmitted';
+                            terminalLogs.appendChild(completionLog);
+                            
+                            // Display results
+                            displayResults(data.data);
+                            
+                        } else if (data.status === 'error') {
+                            // Error occurred
+                            terminalStatus.innerText = 'ERROR';
+                            terminalStatus.style.color = '#ef4444';
+                            
+                            const errorLog = document.createElement('div');
+                            errorLog.className = 'log-line';
+                            errorLog.style.color = '#ef4444';
+                            errorLog.innerHTML = `❌ ${data.message || 'Analysis failed'}`;
+                            terminalLogs.appendChild(errorLog);
+                            
+                        } else {
+                            // Status update
+                            const logLine = document.createElement('div');
+                            logLine.className = 'log-line';
+                            
+                            if (data.status === 'success') {
+                                logLine.style.color = '#34d399';
+                            } else if (data.status === 'tool') {
+                                logLine.style.color = '#60a5fa';
+                            } else {
+                                logLine.style.color = '#94a3b8';
                             }
-                            return;
+                            
+                            logLine.innerHTML = data.message;
+                            terminalLogs.appendChild(logLine);
+                            terminalLogs.scrollTop = terminalLogs.scrollHeight;
                         }
+                    } catch (err) {
+                        console.error('Parse error:', err);
                     }
                 }
             }
-        })
-        .catch(error => {
-            setLoadingState(false);
-            reject(error);
-        });
-    });
-}
-
-// Handle SSE stream messages
-function handleStreamMessage(data) {
-    if (data.message) {
-        // Map status types to colors
-        const colorMap = {
-            'info': '#61afef',      // Blue
-            'success': '#98c379',   // Green
-            'tool': '#e5c07b',      // Yellow
-            'error': '#e06c75',     // Red
-            'done': '#56b6c2'       // Cyan
-        };
+        }
         
-        const color = colorMap[data.status] || '#34d399'; // Default green
-        addTerminalLog(data.message, color);
+    } catch (error) {
+        console.error('Analysis error:', error);
+        terminalStatus.innerText = 'ERROR';
+        terminalStatus.style.color = '#ef4444';
+        
+        const errorLog = document.createElement('div');
+        errorLog.className = 'log-line';
+        errorLog.style.color = '#ef4444';
+        errorLog.innerHTML = `❌ ${error.message}`;
+        terminalLogs.appendChild(errorLog);
+    } finally {
+        // Re-enable button
+        analyzeBtn.disabled = false;
+        analyzeBtn.innerText = 'RUN EXECUTION_PIPELINE() ➔';
     }
-}
+});
 
-// Add log to terminal
-function addTerminalLog(message, color = '#34d399') {
-    const logLine = document.createElement('div');
-    logLine.innerText = message;
-    logLine.style.color = color;
-    logLine.style.marginBottom = '4px';
-    
-    terminalLogs.appendChild(logLine);
-    
-    // Auto-scroll to bottom
-    terminalLogs.scrollTop = terminalLogs.scrollHeight;
-}
-
-// Set loading state
-function setLoadingState(isLoading) {
-    submitBtn.disabled = isLoading;
-    
-    if (isLoading) {
-        submitText.classList.add('hidden');
-        submitLoader.classList.remove('hidden');
-    } else {
-        submitText.classList.remove('hidden');
-        submitLoader.classList.add('hidden');
-    }
-}
-
-// Display results with markdown rendering
 function displayResults(data) {
     // Show results section
     resultsSection.classList.remove('hidden');
+    resultsSection.style.display = 'grid';
     
-    // Scroll to results
-    setTimeout(() => {
-        resultsSection.scrollIntoView({ behavior: 'smooth' });
-    }, 300);
-    
-    // Populate result cards with markdown rendering
-    const results = {
-        jobSearchResult: data.job_search || 'No job search data available',
-        skillGapResult: data.skill_gaps || 'No skill gap data available',
-        projectIdeasResult: data.project_ideas || 'No project ideas available',
-        githubReviewResult: data.github_summary || 'No GitHub review available'
-    };
-    
-    // Animate results in with markdown
-    Object.keys(results).forEach((key, index) => {
-        setTimeout(() => {
-            const element = document.getElementById(key);
-            
-            // Render markdown to HTML
-            const markdownText = results[key];
-            const htmlContent = typeof marked !== 'undefined' 
-                ? marked.parse(markdownText) 
-                : formatTextFallback(markdownText);
-            
-            element.innerHTML = htmlContent;
-            element.style.opacity = '0';
-            element.style.transform = 'translateY(20px)';
-            
-            setTimeout(() => {
-                element.style.transition = 'all 0.5s ease';
-                element.style.opacity = '1';
-                element.style.transform = 'translateY(0)';
-            }, 50);
-        }, index * 150);
-    });
+    // Render markdown content
+    document.getElementById('job-search-content').innerHTML = marked.parse(data.job_search || 'No data available');
+    document.getElementById('skill-gaps-content').innerHTML = marked.parse(data.skill_gaps || 'No data available');
+    document.getElementById('project-ideas-content').innerHTML = marked.parse(data.project_ideas || 'No data available');
+    document.getElementById('github-summary-content').innerHTML = marked.parse(data.github_summary || 'No data available');
 }
-
-// Fallback text formatting if marked.js fails to load
-function formatTextFallback(text) {
-    if (!text || typeof text !== 'string') return 'No data available';
-    
-    // Replace numbered lists
-    text = text.replace(/(\d+)\.\s/g, '<strong>$1.</strong> ');
-    
-    // Replace bullet points
-    text = text.replace(/•/g, '•');
-    
-    // Replace double newlines with paragraph breaks
-    text = text.replace(/\n\n/g, '<br><br>');
-    
-    // Replace single newlines with line breaks
-    text = text.replace(/\n/g, '<br>');
-    
-    // Highlight important sections
-    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    
-    // Convert ## headers
-    text = text.replace(/^##\s+(.+)$/gm, '<h4>$1</h4>');
-    
-    return text;
-}
-
-// Show error message
-function showError(message) {
-    // Create error notification
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-notification';
-    errorDiv.style.cssText = `
-        position: fixed;
-        top: 24px;
-        right: 24px;
-        background: #f44336;
-        color: white;
-        padding: 16px 24px;
-        border-radius: 12px;
-        box-shadow: 0 8px 30px rgba(244, 67, 54, 0.3);
-        z-index: 2000;
-        animation: slideIn 0.3s ease;
-        max-width: 400px;
-    `;
-    errorDiv.textContent = message;
-    
-    document.body.appendChild(errorDiv);
-    
-    // Remove after 5 seconds
-    setTimeout(() => {
-        errorDiv.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => errorDiv.remove(), 300);
-    }, 5000);
-}
-
-// Reset form
-function resetForm() {
-    form.reset();
-    fileName.textContent = 'No file chosen';
-    fileName.style.color = '#666';
-    resultsSection.classList.add('hidden');
-    terminalContainer.style.display = 'none';
-    terminalLogs.innerHTML = '';
-    
-    // Scroll to form
-    form.scrollIntoView({ behavior: 'smooth' });
-}
-
-// Add CSS animations
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(400px);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes slideOut {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(400px);
-            opacity: 0;
-        }
-    }
-`;
-document.head.appendChild(style);
-
-// Log initialization
-console.log('Career Assistant Agent - Frontend Initialized with SSE');
-console.log('API Base URL:', API_BASE_URL);
-console.log('Marked.js loaded:', typeof marked !== 'undefined');
-console.log('Terminal-style console ready');

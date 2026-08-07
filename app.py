@@ -26,7 +26,7 @@ load_dotenv()
 # Initialize FastAPI app
 app = FastAPI(
     title="Career Assistant Agent",
-    version="7.2.0",
+    version="8.0.0",
     description="AI Career Assistant with AgentExecutor, 4 Tools, and Live Status Streaming"
 )
 
