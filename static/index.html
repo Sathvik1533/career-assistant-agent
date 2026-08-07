@@ -1,99 +1,223 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="h-full" lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Career Intelligence Engine</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
-        body { background-color: #09090b; color: #f4f4f5; display: flex; min-height: 100vh; overflow: hidden; }
-        
-        .workspace { display: flex; width: 100%; height: 100vh; }
-        
-        /* Premium Left Configuration Bar */
-        .config-sidebar { width: 360px; min-width: 360px; border-right: 1px solid #1e293b; background-color: #09090b; padding: 40px 24px; display: flex; flex-direction: column; gap: 32px; height: 100%; }
-        .branding h1 { font-size: 16px; font-weight: 600; color: #ffffff; letter-spacing: -0.3px; }
-        .branding p { font-size: 13px; color: #71717a; margin-top: 4px; }
-        
-        .form-pipeline { display: flex; flex-direction: column; gap: 24px; }
-        .form-row { display: flex; flex-direction: column; gap: 8px; }
-        .form-row label { font-size: 11px; font-weight: 500; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.5px; }
-        .form-row input[type="text"] { background-color: #09090b; border: 1px solid #27272a; border-radius: 4px; padding: 12px 14px; color: #ffffff; font-size: 13px; outline: none; transition: border-color 0.15s; }
-        .form-row input[type="text"]:focus { border-color: #52525b; }
-        
-        /* Clean Custom Uploader Bar */
-        .upload-trigger-bar { background-color: #09090b; border: 1px dashed #27272a; border-radius: 4px; padding: 16px; text-align: center; cursor: pointer; font-size: 13px; color: #71717a; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .upload-trigger-bar:hover { border-color: #52525b; background-color: #141417; }
-        .upload-trigger-bar strong { color: #f4f4f5; font-weight: 500; }
-        
-        .action-submit-btn { background-color: #ffffff; color: #09090b; border: none; border-radius: 4px; padding: 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; margin-top: 8px; width: 100%; }
-        .action-submit-btn:hover { opacity: 0.9; }
-        
-        /* Right Content Panel */
-        .output-viewport { flex: 1; padding: 40px; display: flex; flex-direction: column; gap: 24px; height: 100%; overflow-y: auto; background-color: #09090b; }
-        
-        /* Minimal Single Line Telemetry Row */
-        .telemetry-indicator-bar { display: flex; align-items: center; gap: 12px; font-size: 12px; font-family: monospace; color: #71717a; padding-bottom: 16px; border-bottom: 1px solid #1e293b; }
-        .telemetry-node { width: 6px; height: 6px; background-color: #27272a; border-radius: 50%; }
-        
-        /* Enterprise Layout Panes */
-        .workspace-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; flex-grow: 1; }
-        .grid-pane { border: 1px solid #1e293b; background-color: #09090b; border-radius: 6px; padding: 24px; display: flex; flex-direction: column; gap: 14px; height: auto; min-height: 240px; }
-        .grid-pane h3 { font-size: 13px; font-weight: 600; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px dashed #1e293b; padding-bottom: 10px; }
-        .grid-pane-body { font-size: 13.5px; color: #a1a1aa; line-height: 1.6; }
-        .grid-pane-body p { margin-bottom: 12px; }
-        .grid-pane-body ul { margin-left: 18px; margin-top: 6px; }
-        .grid-pane-body li { margin-bottom: 6px; }
-        .grid-pane-body strong { color: #ffffff; }
-        .grid-pane-body pre { background-color: #141417; border: 1px solid #27272a; padding: 12px; border-radius: 4px; font-family: monospace; color: #e4e4e7; margin: 8px 0; overflow-x: auto; }
-    </style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Career Assistant Engine</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script id="tailwind-config">
+tailwind.config = {
+darkMode: "class",
+theme: {
+extend: {
+"colors": {
+"on-secondary-container": "#57657a",
+"surface-bright": "#f6f9ff",
+"inverse-primary": "#bec6e0",
+"surface-container-high": "#e3e9f1",
+"primary-fixed-dim": "#bec6e0",
+"tertiary-container": "#001a42",
+"tertiary": "#000000",
+"on-error-container": "#93000a",
+"secondary-fixed-dim": "#b9c7df",
+"on-tertiary-container": "#3980f4",
+"on-tertiary": "#ffffff",
+"tertiary-fixed": "#d8e2ff",
+"on-surface-variant": "#45464d",
+"tertiary-fixed-dim": "#adc6ff",
+"on-secondary": "#ffffff",
+"secondary-fixed": "#d5e3fc",
+"on-primary-fixed": "#131b2e",
+"on-primary-fixed-variant": "#3f465c",
+"on-surface": "#161c22",
+"surface-tint": "#565e74",
+"surface-container-low": "#eef4fc",
+"inverse-on-surface": "#ebf1f9",
+"primary-container": "#131b2e",
+"on-secondary-fixed-variant": "#3a485b",
+"background": "#ffffff",
+"on-error": "#ffffff",
+"surface-container-lowest": "#ffffff",
+"outline": "#76777d",
+"error": "#ba1a1a",
+"surface-variant": "#dde3eb",
+"surface-container": "#e8eef6",
+"on-tertiary-fixed": "#001a42",
+"on-background": "#161c22",
+"outline-variant": "#c6c6cd",
+"on-primary": "#ffffff",
+"surface-dim": "#d4dbe2",
+"inverse-surface": "#2b3137",
+"error-container": "#ffdad6",
+"on-primary-container": "#7c839b",
+"surface-container-highest": "#dde3eb",
+"secondary": "#515f74",
+"surface": "#f6f9ff",
+"on-tertiary-fixed-variant": "#004395",
+"primary": "#000000",
+"on-secondary-fixed": "#0d1c2e",
+"primary-fixed": "#dae2fd",
+"secondary-container": "#d5e3fc"
+},
+"borderRadius": {
+"DEFAULT": "0.25rem",
+"lg": "0.5rem",
+"xl": "0.75rem",
+"full": "9999px"
+},
+"spacing": {
+"lg": "24px",
+"md": "16px",
+"gutter": "16px",
+"margin-page": "32px",
+"xs": "4px",
+"base": "4px",
+"sm": "8px",
+"xl": "48px"
+},
+"fontFamily": {
+"headline-md": ["Hanken Grotesk"],
+"display-lg": ["Hanken Grotesk"],
+"body-technical": ["Geist"],
+"label-caps": ["Geist"],
+"headline-lg-mobile": ["Hanken Grotesk"],
+"body-main": ["Inter"]
+},
+"fontSize": {
+"headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+"display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+"body-technical": ["13px", { "lineHeight": "20px", "letterSpacing": "0", "fontWeight": "450" }],
+"label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "700" }],
+"headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+"body-main": ["14px", { "lineHeight": "22px", "letterSpacing": "0", "fontWeight": "400" }]
+}
+}
+}
+}
+</script>
+<style>
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #fafafa; border-left: 1px solid #e2e8f0; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.markdown-body { font-family: 'Geist', sans-serif; font-size: 13px; line-height: 1.6; color: #1e293b; }
+.markdown-body h1, .markdown-body h2, .markdown-body h3 { font-family: 'Hanken Grotesk', sans-serif; font-weight: 600; color: #0f172a; margin-top: 16px; margin-bottom: 8px; }
+.markdown-body p { margin-bottom: 12px; }
+.markdown-body ul { list-style-type: disc; padding-left: 20px; margin-bottom: 12px; }
+.markdown-body code { font-family: 'Geist', monospace; background-color: #f1f5f9; padding: 2px 4px; border: 1px solid #e2e8f0; font-size: 12px; }
+</style>
 </head>
-<body>
-    <div class="workspace">
-        <!-- Input Sidebar -->
-        <aside class="config-sidebar">
-            <div class="branding">
-                <h1>Career Engine</h1>
-                <p>Telemetry-driven profile alignment pipeline.</p>
-            </div>
-            
-            <form id="pipeline-form" class="form-pipeline">
-                <div class="form-row">
-                    <label>Resume Payload</label>
-                    <div id="upload-bar" class="upload-trigger-bar">
-                        <span id="upload-text"><strong>Select file</strong> or drop PDF</span>
-                    </div>
-                    <input type="file" id="resume" accept=".pdf" style="display: none;" required />
-                </div>
-                <div class="form-row">
-                    <label>Target Architecture Role</label>
-                    <input type="text" id="target_role" placeholder="e.g. Backend Engineer" required />
-                </div>
-                <div class="form-row">
-                    <label>GitHub Username</label>
-                    <input type="text" id="github_username" placeholder="e.g. Sathvik1533" required />
-                </div>
-                <button type="submit" class="action-submit-btn">Execute Analysis</button>
-            </form>
-        </aside>
-        
-        <!-- Dynamic Results Screen -->
-        <main class="output-viewport">
-            <div class="telemetry-indicator-bar">
-                <div id="telemetry-node" class="telemetry-node"></div>
-                <span id="telemetry-text">STATUS: ENGINE_IDLE // AWAITING_PIPELINE_TRIGGER</span>
-            </div>
-            
-            <div class="workspace-grid">
-                <div class="grid-pane"><h3>Market Alignment Strategy</h3><div id="res-job" class="grid-pane-body">Context uninitialized. Execute pipeline function above.</div></div>
-                <div class="grid-pane"><h3>Architectural Skill Matrix Gaps</h3><div id="res-skills" class="grid-pane-body">Context uninitialized. Execute pipeline function above.</div></div>
-                <div class="grid-pane"><h3>Target Portfolio Roadmap</h3><div id="res-projects" class="grid-pane-body">Context uninitialized. Execute pipeline function above.</div></div>
-                <div class="grid-pane"><h3>GitHub Portfolio Diagnostics</h3><div id="res-github" class="grid-pane-body">Context uninitialized. Execute pipeline function above.</div></div>
-            </div>
-        </main>
-    </div>
-    
-    <script src="/static/script.js"></script>
+<body class="bg-background text-on-surface h-full flex overflow-hidden antialiased selection:bg-primary selection:text-white">
+<nav class="bg-surface-container-low fixed left-0 top-0 h-screen w-[340px] border-r border-outline-variant flex flex-col py-xl z-20">
+<div class="px-lg pb-lg mb-lg border-b border-outline-variant flex items-center gap-md">
+<div class="w-10 h-10 bg-primary flex items-center justify-center text-white shrink-0">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">terminal</span>
+</div>
+<div>
+<h1 class="text-label-caps font-label-caps tracking-widest text-primary uppercase">AI CAREER ENGINE</h1>
+<p class="text-[10px] text-secondary font-mono mt-xs">V10.0.0 OPERATIONAL</p>
+</div>
+</div>
+<div class="px-lg pt-lg mt-lg border-t border-outline-variant">
+<h2 class="text-label-caps font-label-caps text-secondary uppercase mb-md">Payload Configuration</h2>
+<form class="space-y-md" id="analyzeForm">
+<div>
+<label class="block text-label-caps font-label-caps uppercase text-secondary mb-xs">Resume Profile</label>
+<div class="border-2 border-dashed border-[#e2e8f0] bg-[#fafafa] hover:bg-[#f1f5f9] transition-colors p-md text-center cursor-pointer relative group h-24 flex flex-col items-center justify-center" id="dropZone">
+<input accept=".pdf,.doc,.docx" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" id="fileUpload" name="resume" type="file" required/>
+<div class="flex flex-col items-center gap-xs" id="uploadUI">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">upload_file</span>
+<span class="text-label-caps font-label-caps text-outline group-hover:text-primary transition-colors">Drop PDF here</span>
+</div>
+<div class="hidden flex-col items-center gap-xs" id="successUI">
+<span class="material-symbols-outlined text-[#3b82f6]">check_circle</span>
+<span class="text-body-technical font-body-technical text-primary font-bold truncate max-w-[200px]" id="fileNameDisplay">filename.pdf</span>
+</div>
+</div>
+</div>
+<div>
+<label class="block text-label-caps font-label-caps uppercase text-secondary mb-xs" for="targetRole">Target Role</label>
+<input class="w-full bg-[#fafafa] border border-[#e2e8f0] text-body-technical font-body-technical px-sm py-sm focus:outline-none focus:border-[#3b82f6] focus:ring-0 transition-colors h-10 rounded-none placeholder:text-outline-variant" id="targetRole" name="target_role" placeholder="e.g. Backend Engineer" required type="text"/>
+</div>
+<div>
+<label class="block text-label-caps font-label-caps uppercase text-secondary mb-xs" for="githubUsername">GitHub Username</label>
+<input class="w-full bg-[#fafafa] border border-[#e2e8f0] text-body-technical font-body-technical px-sm py-sm focus:outline-none focus:border-[#3b82f6] focus:ring-0 transition-colors h-10 rounded-none placeholder:text-outline-variant" id="githubUsername" name="github_username" placeholder="e.g. Sathvik1533" required type="text"/>
+</div>
+<button class="w-full h-12 bg-primary text-white text-label-caps font-label-caps uppercase tracking-wider hover:bg-[#1e293b] transition-colors flex items-center justify-center gap-sm mt-lg rounded-none" id="analyzeBtn" type="submit">
+<span>Analyze Profile</span>
+<span class="material-symbols-outlined text-[16px]">memory</span>
+</button>
+</form>
+</div>
+</nav>
+<div class="ml-[340px] flex-1 flex flex-col h-screen overflow-hidden bg-background relative z-10">
+<header class="bg-surface flex justify-between items-center px-gutter w-full docked top-0 h-16 border-b border-outline-variant shrink-0">
+<div class="flex items-center gap-md">
+<span class="text-label-caps font-label-caps text-on-secondary-container tracking-widest uppercase">TELEMETRY: STATUS ACTIVE</span>
+</div>
+<div class="flex items-center gap-sm">
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest transition-colors">
+<span class="material-symbols-outlined text-[20px]">notifications_none</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest transition-colors">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest transition-colors">
+<span class="material-symbols-outlined text-[20px]">terminal</span>
+</button>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto p-margin-page">
+<div class="flex items-center justify-between mb-lg border-b border-dashed border-[#e2e8f0] pb-sm">
+<div class="flex items-center gap-sm">
+<div class="w-1.5 h-1.5 rounded-full bg-outline transition-colors duration-300" id="statusIndicator"></div>
+<span class="text-body-technical font-body-technical font-mono text-secondary uppercase tracking-wider" id="statusText">SYSTEM_STATUS: IDLE // AWAITING_PAYLOAD</span>
+</div>
+<div class="text-label-caps font-label-caps text-outline font-mono" id="timestamp">--:--:--</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-md h-[calc(100%-40px)] min-h-[600px]">
+<div class="bg-[#ffffff] border border-[#e2e8f0] flex flex-col">
+<div class="h-10 border-b border-[#e2e8f0] bg-[#fafafa] flex items-center px-sm gap-sm shrink-0">
+<span class="material-symbols-outlined text-secondary text-[16px]">work_history</span>
+<h3 class="text-label-caps font-label-caps uppercase text-primary">Market Alignment Strategy</h3>
+</div>
+<div class="p-lg flex-1 overflow-y-auto markdown-body" id="outJobSearch">
+<div class="h-full flex items-center justify-center text-outline-variant italic font-body-technical">Awaiting computation...</div>
+</div>
+</div>
+<div class="bg-[#ffffff] border border-[#e2e8f0] flex flex-col">
+<div class="h-10 border-b border-[#e2e8f0] bg-[#fafafa] flex items-center px-sm gap-sm shrink-0">
+<span class="material-symbols-outlined text-secondary text-[16px]">radar</span>
+<h3 class="text-label-caps font-label-caps uppercase text-primary">Architectural Skill Matrix Gaps</h3>
+</div>
+<div class="p-lg flex-1 overflow-y-auto markdown-body" id="outSkillGaps">
+<div class="h-full flex items-center justify-center text-outline-variant italic font-body-technical">Awaiting computation...</div>
+</div>
+</div>
+<div class="bg-[#ffffff] border border-[#e2e8f0] flex flex-col">
+<div class="h-10 border-b border-[#e2e8f0] bg-[#fafafa] flex items-center px-sm gap-sm shrink-0">
+<span class="material-symbols-outlined text-secondary text-[16px]">lightbulb</span>
+<h3 class="text-label-caps font-label-caps uppercase text-primary">Target Portfolio Roadmap</h3>
+</div>
+<div class="p-lg flex-1 overflow-y-auto markdown-body" id="outProjects">
+<div class="h-full flex items-center justify-center text-outline-variant italic font-body-technical">Awaiting computation...</div>
+</div>
+</div>
+<div class="bg-[#ffffff] border border-[#e2e8f0] flex flex-col">
+<div class="h-10 border-b border-[#e2e8f0] bg-[#fafafa] flex items-center px-sm gap-sm shrink-0">
+<span class="material-symbols-outlined text-secondary text-[16px]">code_blocks</span>
+<h3 class="text-label-caps font-label-caps uppercase text-primary">GitHub Portfolio Diagnostics</h3>
+</div>
+<div class="p-lg flex-1 overflow-y-auto markdown-body" id="outGithub">
+<div class="h-full flex items-center justify-center text-outline-variant italic font-body-technical">Awaiting computation...</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script src="/static/script.js"></script>
 </body>
 </html>
