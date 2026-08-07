@@ -190,14 +190,14 @@ async def status_generator(resume_text: str, target_role: str, github_username: 
         yield f"data: {json.dumps({'status': 'success', 'message': '✅ Analysis complete!'})}\n\n"
         await asyncio.sleep(0.3)
         
-        # Send final data
+        # Send final data (use .get() with defaults for safety)
         final_data = {
             "status": "done",
             "data": {
-                "job_search": sections["job_search"],
-                "skill_gaps": sections["skill_gaps"],
-                "project_ideas": sections["project_ideas"],
-                "github_summary": sections["github_summary"],
+                "job_search": sections.get("job_search", "No job search data available"),
+                "skill_gaps": sections.get("skill_gaps", "No skill gap data available"),
+                "project_ideas": sections.get("project_ideas", "No project ideas available"),
+                "github_summary": sections.get("github_summary", "No GitHub analysis available"),
                 "full_analysis": analysis_text,
                 "target_role": target_role,
                 "github_username": github_username
@@ -310,12 +310,12 @@ async def analyze_career_endpoint(
             "status": "success",
             "target_role": target_role,
             "github_username": github_username,
-            "job_search": sections["job_search"],
-            "skill_gaps": sections["skill_gaps"],
-            "project_ideas": sections["project_ideas"],
-            "github_summary": sections["github_summary"],
+            "job_search": sections.get("job_search", "No job search data available"),
+            "skill_gaps": sections.get("skill_gaps", "No skill gap data available"),
+            "project_ideas": sections.get("project_ideas", "No project ideas available"),
+            "github_summary": sections.get("github_summary", "No GitHub analysis available"),
             "full_analysis": analysis_text,
-            "agent_type": "AgentExecutor",
+            "agent_type": "Simple Tool Binding",
             "tools_used": 4
         }
         
