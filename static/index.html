@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>AI Career Assistant Engine</title>
+<title>AI Career Assistant</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
@@ -14,85 +14,19 @@ darkMode: "class",
 theme: {
 extend: {
 "colors": {
-"on-secondary-container": "#57657a",
-"surface-bright": "#f6f9ff",
-"inverse-primary": "#bec6e0",
-"surface-container-high": "#e3e9f1",
-"primary-fixed-dim": "#bec6e0",
-"tertiary-container": "#001a42",
-"tertiary": "#000000",
-"on-error-container": "#93000a",
-"secondary-fixed-dim": "#b9c7df",
-"on-tertiary-container": "#3980f4",
-"on-tertiary": "#ffffff",
-"tertiary-fixed": "#d8e2ff",
-"on-surface-variant": "#45464d",
-"tertiary-fixed-dim": "#adc6ff",
-"on-secondary": "#ffffff",
-"secondary-fixed": "#d5e3fc",
-"on-primary-fixed": "#131b2e",
-"on-primary-fixed-variant": "#3f465c",
-"on-surface": "#161c22",
-"surface-tint": "#565e74",
-"surface-container-low": "#eef4fc",
-"inverse-on-surface": "#ebf1f9",
-"primary-container": "#131b2e",
-"on-secondary-fixed-variant": "#3a485b",
-"background": "#ffffff",
-"on-error": "#ffffff",
-"surface-container-lowest": "#ffffff",
-"outline": "#76777d",
-"error": "#ba1a1a",
-"surface-variant": "#dde3eb",
-"surface-container": "#e8eef6",
-"on-tertiary-fixed": "#001a42",
-"on-background": "#161c22",
-"outline-variant": "#c6c6cd",
-"on-primary": "#ffffff",
-"surface-dim": "#d4dbe2",
-"inverse-surface": "#2b3137",
-"error-container": "#ffdad6",
-"on-primary-container": "#7c839b",
-"surface-container-highest": "#dde3eb",
-"secondary": "#515f74",
-"surface": "#f6f9ff",
-"on-tertiary-fixed-variant": "#004395",
-"primary": "#000000",
-"on-secondary-fixed": "#0d1c2e",
-"primary-fixed": "#dae2fd",
-"secondary-container": "#d5e3fc"
-},
-"borderRadius": {
-"DEFAULT": "0.25rem",
-"lg": "0.5rem",
-"xl": "0.75rem",
-"full": "9999px"
-},
-"spacing": {
-"lg": "24px",
-"md": "16px",
-"gutter": "16px",
-"margin-page": "32px",
-"xs": "4px",
-"base": "4px",
-"sm": "8px",
-"xl": "48px"
-},
-"fontFamily": {
-"headline-md": ["Hanken Grotesk"],
-"display-lg": ["Hanken Grotesk"],
-"body-technical": ["Geist"],
-"label-caps": ["Geist"],
-"headline-lg-mobile": ["Hanken Grotesk"],
-"body-main": ["Inter"]
-},
-"fontSize": {
-"headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
-"display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
-"body-technical": ["13px", { "lineHeight": "20px", "letterSpacing": "0", "fontWeight": "450" }],
-"label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "700" }],
-"headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
-"body-main": ["14px", { "lineHeight": "22px", "letterSpacing": "0", "fontWeight": "400" }]
+"primary": "#3b82f6",
+"primary-dark": "#2563eb",
+"primary-light": "#60a5fa",
+"surface": "#f8fafc",
+"surface-dark": "#0f172a",
+"border-light": "#e2e8f0",
+"border-dark": "#1e293b",
+"text-primary": "#0f172a",
+"text-secondary": "#64748b",
+"text-muted": "#94a3b8",
+"accent-blue": "#3b82f6",
+"accent-green": "#10b981",
+"accent-orange": "#f59e0b"
 }
 }
 }
@@ -100,122 +34,153 @@ extend: {
 </script>
 <style>
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: #fafafa; border-left: 1px solid #e2e8f0; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 0; }
+::-webkit-scrollbar-track { background: #f1f5f9; border-left: 1px solid #e2e8f0; }
+.dark ::-webkit-scrollbar-track { background: #1e293b; border-left: 1px solid #334155; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.dark ::-webkit-scrollbar-thumb { background: #475569; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-.markdown-body { font-family: 'Geist', sans-serif; font-size: 13px; line-height: 1.6; color: #1e293b; }
-.markdown-body h1, .markdown-body h2, .markdown-body h3 { font-family: 'Hanken Grotesk', sans-serif; font-weight: 600; color: #0f172a; margin-top: 16px; margin-bottom: 8px; }
+.markdown-body { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.6; }
+.markdown-body h1, .markdown-body h2, .markdown-body h3 { font-family: 'Hanken Grotesk', sans-serif; font-weight: 600; margin-top: 16px; margin-bottom: 8px; }
 .markdown-body p { margin-bottom: 12px; }
 .markdown-body ul { list-style-type: disc; padding-left: 20px; margin-bottom: 12px; }
-.markdown-body code { font-family: 'Geist', monospace; background-color: #f1f5f9; padding: 2px 4px; border: 1px solid #e2e8f0; font-size: 12px; }
+.markdown-body code { font-family: 'Geist', monospace; background-color: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+.dark .markdown-body code { background-color: #1e293b; }
 </style>
 </head>
-<body class="bg-background dark:bg-[#09090b] text-on-surface dark:text-[#f4f4f5] h-full flex overflow-hidden antialiased selection:bg-primary selection:text-white">
-<nav class="bg-surface-container-low dark:bg-[#09090b] fixed left-0 top-0 h-screen w-[340px] border-r border-outline-variant dark:border-[#1e293b] flex flex-col py-xl z-20">
-<div class="px-lg pb-lg mb-lg border-b border-outline-variant flex items-center gap-md">
-<div class="w-10 h-10 bg-primary flex items-center justify-center text-white shrink-0">
-<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">terminal</span>
+<body class="bg-surface dark:bg-surface-dark text-text-primary dark:text-slate-200 h-full flex overflow-hidden antialiased">
+<!-- Left Sidebar -->
+<nav class="bg-white dark:bg-[#0a0f1e] fixed left-0 top-0 h-screen w-[340px] border-r border-border-light dark:border-border-dark flex flex-col shadow-sm z-20">
+<div class="px-6 py-6 border-b border-border-light dark:border-border-dark bg-gradient-to-br from-blue-50 to-white dark:from-[#0a0f1e] dark:to-[#0f172a]">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white rounded-lg shadow-md">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">psychology</span>
 </div>
 <div>
-<h1 class="text-label-caps font-label-caps tracking-widest text-primary uppercase">AI CAREER ENGINE</h1>
-<p class="text-[10px] text-secondary font-mono mt-xs">V10.0.0 OPERATIONAL</p>
+<h1 class="text-lg font-bold text-text-primary dark:text-white">Career Assistant</h1>
+<p class="text-xs text-text-secondary dark:text-slate-400">AI-Powered Career Analysis</p>
 </div>
 </div>
-<div class="px-lg pt-lg mt-lg border-t border-outline-variant">
-<h2 class="text-label-caps font-label-caps text-secondary uppercase mb-md">Payload Configuration</h2>
-<form class="space-y-md" id="analyzeForm">
+</div>
+
+<div class="px-6 py-6 flex-1 overflow-y-auto">
+<h2 class="text-xs font-semibold uppercase tracking-wider text-text-secondary dark:text-slate-400 mb-4">Your Information</h2>
+<form class="space-y-5" id="analyzeForm">
+<!-- Resume Upload -->
 <div>
-<label class="block text-label-caps font-label-caps uppercase text-secondary mb-xs">Resume Profile</label>
-<div class="border-2 border-dashed border-[#e2e8f0] bg-[#fafafa] hover:bg-[#f1f5f9] transition-colors p-md text-center cursor-pointer relative group h-24 flex flex-col items-center justify-center" id="dropZone">
+<label class="block text-sm font-medium text-text-primary dark:text-slate-200 mb-2">Resume</label>
+<div class="border-2 border-dashed border-border-light dark:border-border-dark bg-slate-50 dark:bg-[#0f172a] hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-[#1e293b] transition-all p-4 text-center cursor-pointer relative group h-24 flex flex-col items-center justify-center rounded-lg" id="dropZone">
 <input accept=".pdf,.doc,.docx" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" id="fileUpload" name="resume" type="file" required/>
-<div class="flex flex-col items-center gap-xs" id="uploadUI">
-<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">upload_file</span>
-<span class="text-label-caps font-label-caps text-outline group-hover:text-primary transition-colors">Upload Resume</span>
+<div class="flex flex-col items-center gap-2" id="uploadUI">
+<span class="material-symbols-outlined text-text-muted dark:text-slate-500 group-hover:text-blue-500 transition-colors text-[28px]">upload_file</span>
+<span class="text-xs font-medium text-text-secondary dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Upload Resume</span>
 </div>
-<div class="hidden flex-col items-center gap-xs" id="successUI">
-<span class="material-symbols-outlined text-[#3b82f6]">check_circle</span>
-<span class="text-body-technical font-body-technical text-primary font-bold truncate max-w-[200px]" id="fileNameDisplay">filename.pdf</span>
+<div class="hidden flex-col items-center gap-2" id="successUI">
+<span class="material-symbols-outlined text-green-500 text-[28px]">check_circle</span>
+<span class="text-xs font-semibold text-text-primary dark:text-slate-200 truncate max-w-[240px]" id="fileNameDisplay">filename.pdf</span>
 </div>
 </div>
 </div>
+
+<!-- Target Role -->
 <div>
-<label class="block text-label-caps font-label-caps uppercase text-secondary mb-xs" for="targetRole">Target Role</label>
-<input class="w-full bg-[#fafafa] border border-[#e2e8f0] text-body-technical font-body-technical px-sm py-sm focus:outline-none focus:border-[#3b82f6] focus:ring-0 transition-colors h-10 rounded-none placeholder:text-outline-variant" id="targetRole" name="target_role" placeholder="e.g. Backend Engineer" required type="text"/>
+<label class="block text-sm font-medium text-text-primary dark:text-slate-200 mb-2" for="targetRole">Target Job Role</label>
+<input class="w-full bg-white dark:bg-[#0f172a] border border-border-light dark:border-border-dark text-sm px-3 py-2.5 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all rounded-lg placeholder:text-text-muted dark:placeholder:text-slate-500" id="targetRole" name="target_role" placeholder="e.g., Backend Engineer" required type="text"/>
 </div>
+
+<!-- GitHub Username -->
 <div>
-<label class="block text-label-caps font-label-caps uppercase text-secondary mb-xs" for="githubUsername">GitHub Username</label>
-<input class="w-full bg-[#fafafa] border border-[#e2e8f0] text-body-technical font-body-technical px-sm py-sm focus:outline-none focus:border-[#3b82f6] focus:ring-0 transition-colors h-10 rounded-none placeholder:text-outline-variant" id="githubUsername" name="github_username" placeholder="e.g. Sathvik1533" required type="text"/>
+<label class="block text-sm font-medium text-text-primary dark:text-slate-200 mb-2" for="githubUsername">GitHub Username</label>
+<input class="w-full bg-white dark:bg-[#0f172a] border border-border-light dark:border-border-dark text-sm px-3 py-2.5 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all rounded-lg placeholder:text-text-muted dark:placeholder:text-slate-500" id="githubUsername" name="github_username" placeholder="e.g., Sathvik1533" required type="text"/>
 </div>
-<button class="w-full h-12 bg-primary text-white text-label-caps font-label-caps uppercase tracking-wider hover:bg-[#1e293b] transition-colors flex items-center justify-center gap-sm mt-lg rounded-none" id="analyzeBtn" type="submit">
-<span>Analyze Profile</span>
-<span class="material-symbols-outlined text-[16px]">memory</span>
+
+<!-- Analyze Button -->
+<button class="w-full h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-semibold tracking-wide transition-all flex items-center justify-center gap-2 mt-6 rounded-lg shadow-md hover:shadow-lg" id="analyzeBtn" type="submit">
+<span>Analyze My Profile</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
 </button>
 </form>
 </div>
 </nav>
-<div class="ml-[340px] flex-1 flex flex-col h-screen overflow-hidden bg-background dark:bg-[#09090b] relative z-10">
-<header class="bg-surface dark:bg-[#09090b] flex justify-between items-center px-gutter w-full docked top-0 h-16 border-b border-outline-variant dark:border-[#1e293b] shrink-0">
-<div class="flex items-center gap-md">
-<span class="text-label-caps font-label-caps text-on-secondary-container tracking-widest uppercase">TELEMETRY: STATUS ACTIVE</span>
+
+<!-- Main Content -->
+<div class="ml-[340px] flex-1 flex flex-col h-screen overflow-hidden">
+<!-- Header -->
+<header class="bg-white dark:bg-[#0a0f1e] flex justify-between items-center px-6 h-16 border-b border-border-light dark:border-border-dark shadow-sm shrink-0">
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 transition-all duration-300" id="statusIndicator"></div>
+<span class="text-sm font-medium text-text-secondary dark:text-slate-400" id="statusText">Ready to analyze</span>
 </div>
-<div class="flex items-center gap-sm">
-<button id="downloadBtn" class="h-10 px-4 flex items-center justify-center gap-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest transition-colors text-label-caps font-label-caps uppercase tracking-wider border border-outline-variant rounded-sm">
-<span class="material-symbols-outlined text-[16px]">download</span>
-<span>Download Roadmap</span>
+</div>
+<div class="flex items-center gap-2">
+<button id="downloadBtn" class="h-9 px-4 flex items-center justify-center gap-2 text-text-secondary dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-[#1e293b] transition-all text-sm font-medium border border-border-light dark:border-border-dark rounded-lg">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span>Download</span>
 </button>
-<button id="themeToggle" class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest transition-colors">
+<button id="themeToggle" class="w-9 h-9 flex items-center justify-center text-text-secondary dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-[#1e293b] transition-all border border-border-light dark:border-border-dark rounded-lg">
 <span class="material-symbols-outlined text-[20px]">dark_mode</span>
 </button>
 </div>
 </header>
-<main class="flex-1 overflow-y-auto p-margin-page">
-<div class="flex items-center justify-between mb-lg border-b border-dashed border-[#e2e8f0] pb-sm">
-<div class="flex items-center gap-sm">
-<div class="w-1.5 h-1.5 rounded-full bg-outline transition-colors duration-300" id="statusIndicator"></div>
-<span class="text-body-technical font-body-technical font-mono text-secondary uppercase tracking-wider" id="statusText">SYSTEM_STATUS: IDLE // AWAITING_PAYLOAD</span>
+
+<!-- Results Grid -->
+<main class="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-[#0f172a] dark:to-[#0a0f1e]">
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-5 min-h-[600px]">
+<!-- Job Search Card -->
+<div class="bg-white dark:bg-[#0a0f1e] border border-border-light dark:border-border-dark rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden">
+<div class="h-12 border-b border-border-light dark:border-border-dark bg-gradient-to-r from-blue-50 to-white dark:from-[#1e293b] dark:to-[#0a0f1e] flex items-center px-4 gap-3 shrink-0">
+<div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[18px]">work</span>
 </div>
-<div class="text-label-caps font-label-caps text-outline font-mono" id="timestamp">--:--:--</div>
+<h3 class="text-sm font-semibold text-text-primary dark:text-white">Job Market Insights</h3>
 </div>
-<div class="grid grid-cols-1 xl:grid-cols-2 gap-md h-[calc(100%-40px)] min-h-[600px]">
-<div class="bg-[#ffffff] border border-[#e2e8f0] flex flex-col">
-<div class="h-10 border-b border-[#e2e8f0] bg-[#fafafa] flex items-center px-sm gap-sm shrink-0">
-<span class="material-symbols-outlined text-secondary text-[16px]">work_history</span>
-<h3 class="text-label-caps font-label-caps uppercase text-primary">Market Alignment Strategy</h3>
-</div>
-<div class="p-lg flex-1 overflow-y-auto markdown-body" id="outJobSearch">
-<div class="h-full flex items-center justify-center text-outline-variant italic font-body-technical">Awaiting computation...</div>
+<div class="p-5 flex-1 overflow-y-auto markdown-body" id="outJobSearch">
+<div class="h-full flex items-center justify-center text-text-muted dark:text-slate-500 italic text-sm">Waiting for analysis...</div>
 </div>
 </div>
-<div class="bg-[#ffffff] border border-[#e2e8f0] flex flex-col">
-<div class="h-10 border-b border-[#e2e8f0] bg-[#fafafa] flex items-center px-sm gap-sm shrink-0">
-<span class="material-symbols-outlined text-secondary text-[16px]">radar</span>
-<h3 class="text-label-caps font-label-caps uppercase text-primary">Architectural Skill Matrix Gaps</h3>
+
+<!-- Skill Gaps Card -->
+<div class="bg-white dark:bg-[#0a0f1e] border border-border-light dark:border-border-dark rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden">
+<div class="h-12 border-b border-border-light dark:border-border-dark bg-gradient-to-r from-orange-50 to-white dark:from-[#1e293b] dark:to-[#0a0f1e] flex items-center px-4 gap-3 shrink-0">
+<div class="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-orange-600 dark:text-orange-400 text-[18px]">trending_up</span>
 </div>
-<div class="p-lg flex-1 overflow-y-auto markdown-body" id="outSkillGaps">
-<div class="h-full flex items-center justify-center text-outline-variant italic font-body-technical">Awaiting computation...</div>
+<h3 class="text-sm font-semibold text-text-primary dark:text-white">Skills to Develop</h3>
 </div>
-</div>
-<div class="bg-[#ffffff] border border-[#e2e8f0] flex flex-col">
-<div class="h-10 border-b border-[#e2e8f0] bg-[#fafafa] flex items-center px-sm gap-sm shrink-0">
-<span class="material-symbols-outlined text-secondary text-[16px]">lightbulb</span>
-<h3 class="text-label-caps font-label-caps uppercase text-primary">Target Portfolio Roadmap</h3>
-</div>
-<div class="p-lg flex-1 overflow-y-auto markdown-body" id="outProjects">
-<div class="h-full flex items-center justify-center text-outline-variant italic font-body-technical">Awaiting computation...</div>
+<div class="p-5 flex-1 overflow-y-auto markdown-body" id="outSkillGaps">
+<div class="h-full flex items-center justify-center text-text-muted dark:text-slate-500 italic text-sm">Waiting for analysis...</div>
 </div>
 </div>
-<div class="bg-[#ffffff] border border-[#e2e8f0] flex flex-col">
-<div class="h-10 border-b border-[#e2e8f0] bg-[#fafafa] flex items-center px-sm gap-sm shrink-0">
-<span class="material-symbols-outlined text-secondary text-[16px]">code_blocks</span>
-<h3 class="text-label-caps font-label-caps uppercase text-primary">GitHub Portfolio Diagnostics</h3>
+
+<!-- Projects Card -->
+<div class="bg-white dark:bg-[#0a0f1e] border border-border-light dark:border-border-dark rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden">
+<div class="h-12 border-b border-border-light dark:border-border-dark bg-gradient-to-r from-purple-50 to-white dark:from-[#1e293b] dark:to-[#0a0f1e] flex items-center px-4 gap-3 shrink-0">
+<div class="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-purple-600 dark:text-purple-400 text-[18px]">lightbulb</span>
 </div>
-<div class="p-lg flex-1 overflow-y-auto markdown-body" id="outGithub">
-<div class="h-full flex items-center justify-center text-outline-variant italic font-body-technical">Awaiting computation...</div>
+<h3 class="text-sm font-semibold text-text-primary dark:text-white">Project Ideas</h3>
+</div>
+<div class="p-5 flex-1 overflow-y-auto markdown-body" id="outProjects">
+<div class="h-full flex items-center justify-center text-text-muted dark:text-slate-500 italic text-sm">Waiting for analysis...</div>
+</div>
+</div>
+
+<!-- GitHub Card -->
+<div class="bg-white dark:bg-[#0a0f1e] border border-border-light dark:border-border-dark rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden">
+<div class="h-12 border-b border-border-light dark:border-border-dark bg-gradient-to-r from-green-50 to-white dark:from-[#1e293b] dark:to-[#0a0f1e] flex items-center px-4 gap-3 shrink-0">
+<div class="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-green-600 dark:text-green-400 text-[18px]">code</span>
+</div>
+<h3 class="text-sm font-semibold text-text-primary dark:text-white">GitHub Analysis</h3>
+</div>
+<div class="p-5 flex-1 overflow-y-auto markdown-body" id="outGithub">
+<div class="h-full flex items-center justify-center text-text-muted dark:text-slate-500 italic text-sm">Waiting for analysis...</div>
 </div>
 </div>
 </div>
 </main>
 </div>
+
 <script src="/static/script.js"></script>
 </body>
 </html>

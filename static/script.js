@@ -10,18 +10,16 @@ const successUI = document.getElementById('successUI');
 const fileNameDisplay = document.getElementById('fileNameDisplay');
 const dropZone = document.getElementById('dropZone');
 
-// Make sure event listener triggers properly
+// File upload event handler
 if (fileUpload) {
     fileUpload.addEventListener('change', function(e) {
         if (e.target.files && e.target.files.length > 0) {
             const fileName = e.target.files[0].name;
             
-            // Update the filename display
             if (fileNameDisplay) {
                 fileNameDisplay.textContent = fileName;
             }
             
-            // Hide upload UI, show success UI
             if (uploadUI) {
                 uploadUI.classList.add('hidden');
                 uploadUI.classList.remove('flex');
@@ -29,11 +27,6 @@ if (fileUpload) {
             if (successUI) {
                 successUI.classList.remove('hidden');
                 successUI.classList.add('flex');
-            }
-            
-            // Update dropzone styling
-            if (dropZone) {
-                dropZone.classList.add('border-[#3b82f6]', 'bg-[#f1f5f9]');
             }
         }
     });
@@ -51,13 +44,10 @@ function resetFileInput() {
         successUI.classList.add('hidden');
         successUI.classList.remove('flex');
     }
-    if (dropZone) {
-        dropZone.classList.remove('border-[#3b82f6]', 'bg-[#f1f5f9]');
-    }
 }
 
 function clearAllResults() {
-    const defaultMessage = '<div class="h-full flex items-center justify-center text-outline-variant italic font-body-technical">Awaiting computation...</div>';
+    const defaultMessage = '<div class="h-full flex items-center justify-center text-text-muted dark:text-slate-500 italic text-sm">Waiting for analysis...</div>';
     
     const outJobSearch = document.getElementById('outJobSearch');
     const outSkillGaps = document.getElementById('outSkillGaps');
@@ -70,10 +60,44 @@ function clearAllResults() {
     if (outGithub) outGithub.innerHTML = defaultMessage;
 }
 
+// Dynamic status updater with user-friendly messages
+function updateStatus(message, type = 'idle') {
+    const statusText = document.getElementById('statusText');
+    const statusIndicator = document.getElementById('statusIndicator');
+    
+    if (statusText) {
+        statusText.textContent = message;
+    }
+    
+    if (statusIndicator) {
+        // Remove all possible classes
+        statusIndicator.classList.remove(
+            'bg-slate-300', 'dark:bg-slate-600',
+            'bg-blue-500', 'animate-pulse',
+            'bg-green-500',
+            'bg-red-500'
+        );
+        
+        // Add appropriate classes based on type
+        switch(type) {
+            case 'processing':
+                statusIndicator.classList.add('bg-blue-500', 'animate-pulse');
+                break;
+            case 'success':
+                statusIndicator.classList.add('bg-green-500');
+                break;
+            case 'error':
+                statusIndicator.classList.add('bg-red-500');
+                break;
+            default: // idle
+                statusIndicator.classList.add('bg-slate-300', 'dark:bg-slate-600');
+        }
+    }
+}
+
 // Dark mode toggle
 const themeToggle = document.getElementById('themeToggle');
 if (themeToggle) {
-    // Check for saved theme preference or default to light
     const savedTheme = localStorage.getItem('theme') || 'light';
     if (savedTheme === 'dark') {
         document.documentElement.classList.add('dark');
@@ -86,38 +110,27 @@ if (themeToggle) {
     });
 }
 
-// Clock Update
-setInterval(() => {
-    const now = new Date();
-    const timestampEl = document.getElementById('timestamp');
-    if (timestampEl) {
-        timestampEl.textContent = now.toLocaleTimeString('en-US', { hour12: false });
-    }
-}, 1000);
-
-// Store analysis data globally for PDF generation
+// Store analysis data globally for download
 let lastAnalysisData = null;
 
-// Download PDF Roadmap
+// Download roadmap function
 function downloadRoadmap() {
     if (!lastAnalysisData) {
-        alert('Please run an analysis first before downloading the roadmap');
+        alert('Please complete an analysis first before downloading');
         return;
     }
     
-    // Create markdown content
     let markdown = `# Career Development Roadmap\n\n`;
     markdown += `**Generated on:** ${new Date().toLocaleString()}\n\n`;
     markdown += `---\n\n`;
-    markdown += `## 📊 Market Alignment Strategy\n\n${lastAnalysisData.job_search}\n\n`;
+    markdown += `## 💼 Job Market Insights\n\n${lastAnalysisData.job_search}\n\n`;
     markdown += `---\n\n`;
-    markdown += `## 🎯 Skill Matrix Gaps\n\n${lastAnalysisData.skill_gaps}\n\n`;
+    markdown += `## 📈 Skills to Develop\n\n${lastAnalysisData.skill_gaps}\n\n`;
     markdown += `---\n\n`;
-    markdown += `## 💡 Portfolio Roadmap\n\n${lastAnalysisData.project_ideas}\n\n`;
+    markdown += `## 💡 Project Ideas\n\n${lastAnalysisData.project_ideas}\n\n`;
     markdown += `---\n\n`;
     markdown += `## 🔧 GitHub Analysis\n\n${lastAnalysisData.github_summary}\n\n`;
     
-    // Create and download file
     const blob = new Blob([markdown], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -129,65 +142,75 @@ function downloadRoadmap() {
     URL.revokeObjectURL(url);
 }
 
-// Attach download handler to button
 const downloadBtn = document.getElementById('downloadBtn');
 if (downloadBtn) {
     downloadBtn.addEventListener('click', downloadRoadmap);
 }
 
-// Form Submit & Real API Pipeline Logic
+// Form submission with dynamic status updates
 const form = document.getElementById('analyzeForm');
 const analyzeBtn = document.getElementById('analyzeBtn');
-const statusText = document.getElementById('statusText');
-const statusIndicator = document.getElementById('statusIndicator');
 
 if (form) {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Clear previous results when starting new analysis
+        // Clear previous results
         clearAllResults();
         lastAnalysisData = null;
         
-        // Check if file is selected
+        // Check file selection
         if (!fileUpload.files || fileUpload.files.length === 0) {
-            alert('Please select a resume file first');
+            alert('Please upload your resume first');
             return;
         }
         
-        // 1. Establish active processing telemetry state
+        // Disable button and update UI
         if (analyzeBtn) {
             analyzeBtn.disabled = true;
-            analyzeBtn.innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin">sync</span><span>PROCESSING</span>';
-            analyzeBtn.classList.add('bg-secondary', 'cursor-not-allowed');
-            analyzeBtn.classList.remove('bg-primary', 'hover:bg-[#1e293b]');
+            analyzeBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span><span>Analyzing...</span>';
+            analyzeBtn.classList.add('opacity-75', 'cursor-not-allowed');
         }
         
-        if (statusText) {
-            statusText.textContent = "SYSTEM STATUS: COMPUTING // MULTI-TOOL AGENT RUNTIME ACTIVE";
-        }
+        // Dynamic status updates
+        updateStatus('Uploading your resume...', 'processing');
         
-        if (statusIndicator) {
-            statusIndicator.classList.remove('bg-outline', 'bg-error');
-            statusIndicator.classList.add('bg-[#3b82f6]', 'animate-pulse');
-        }
-        
-        // 2. Extract files and text properties into multi-part payload package
         const formData = new FormData();
         formData.append('resume', fileUpload.files[0]);
         formData.append('target_role', document.getElementById('targetRole').value);
         formData.append('github_username', document.getElementById('githubUsername').value);
         
+        // Simulated progress updates
+        const statusUpdates = [
+            { delay: 1000, message: 'Reading your resume...', type: 'processing' },
+            { delay: 3000, message: 'Analyzing your experience...', type: 'processing' },
+            { delay: 6000, message: 'Researching job market trends...', type: 'processing' },
+            { delay: 9000, message: 'Identifying skill gaps...', type: 'processing' },
+            { delay: 12000, message: 'Generating project recommendations...', type: 'processing' },
+            { delay: 15000, message: 'Analyzing your GitHub profile...', type: 'processing' },
+            { delay: 18000, message: 'Finalizing your career roadmap...', type: 'processing' }
+        ];
+        
+        const timeouts = [];
+        statusUpdates.forEach(update => {
+            const timeout = setTimeout(() => {
+                updateStatus(update.message, update.type);
+            }, update.delay);
+            timeouts.push(timeout);
+        });
+        
         try {
-            // 4. Fire network packet directly to our real API POST endpoint
             const response = await fetch('/analyze', {
                 method: 'POST',
                 body: formData
             });
             const data = await response.json();
             
+            // Clear all status update timeouts
+            timeouts.forEach(timeout => clearTimeout(timeout));
+            
             if (data.status === 'success') {
-                // Store data for PDF download
+                // Store data for download
                 lastAnalysisData = {
                     job_search: data.job_search || '',
                     skill_gaps: data.skill_gaps || '',
@@ -195,64 +218,43 @@ if (form) {
                     github_summary: data.github_summary || ''
                 };
                 
-                if (statusText) {
-                    statusText.textContent = "SYSTEM_STATUS: SUCCESS // PAYLOAD_COMPILED";
-                }
-                if (statusIndicator) {
-                    statusIndicator.classList.remove('bg-[#3b82f6]', 'animate-pulse');
-                    statusIndicator.classList.add('bg-[#10b981]');
-                }
+                updateStatus('Analysis complete! Review your results below', 'success');
                 
-                // 5. Safely map keys explicitly using the marked library parser
+                // Render results
                 const outJobSearch = document.getElementById('outJobSearch');
                 const outSkillGaps = document.getElementById('outSkillGaps');
                 const outProjects = document.getElementById('outProjects');
                 const outGithub = document.getElementById('outGithub');
                 
-                if (outJobSearch) outJobSearch.innerHTML = marked.parse(data.job_search || "Data null.");
-                if (outSkillGaps) outSkillGaps.innerHTML = marked.parse(data.skill_gaps || "Data null.");
-                if (outProjects) outProjects.innerHTML = marked.parse(data.project_ideas || "Data null.");
-                if (outGithub) outGithub.innerHTML = marked.parse(data.github_summary || "Data null.");
+                if (outJobSearch) outJobSearch.innerHTML = marked.parse(data.job_search || "No data available.");
+                if (outSkillGaps) outSkillGaps.innerHTML = marked.parse(data.skill_gaps || "No data available.");
+                if (outProjects) outProjects.innerHTML = marked.parse(data.project_ideas || "No data available.");
+                if (outGithub) outGithub.innerHTML = marked.parse(data.github_summary || "No data available.");
+                
             } else {
-                if (statusIndicator) {
-                    statusIndicator.classList.remove('bg-[#3b82f6]', 'animate-pulse');
-                    statusIndicator.classList.add('bg-error');
-                }
-                if (statusText) {
-                    statusText.textContent = `SYSTEM_ERROR: ${data.error || 'Execution aborted'}`;
-                }
+                updateStatus('Analysis failed. Please try again.', 'error');
             }
         } catch (err) {
             console.error('Network error:', err);
-            if (statusIndicator) {
-                statusIndicator.classList.remove('bg-[#3b82f6]', 'animate-pulse');
-                statusIndicator.classList.add('bg-error');
-            }
-            if (statusText) {
-                statusText.textContent = `NETWORK_PIPELINE_ERROR: ${err.message}`;
-            }
+            timeouts.forEach(timeout => clearTimeout(timeout));
+            updateStatus('Connection error. Please check your internet.', 'error');
         } finally {
-            // 3. Reset input selectors AFTER API call completes
+            // Reset form and button
             form.reset();
             resetFileInput();
             
-            // 6. Restore action button state parameters safely
             if (analyzeBtn) {
                 analyzeBtn.disabled = false;
-                analyzeBtn.innerHTML = '<span>Analyze Profile</span><span class="material-symbols-outlined text-[16px]">memory</span>';
-                analyzeBtn.classList.remove('bg-secondary', 'cursor-not-allowed');
-                analyzeBtn.classList.add('bg-primary', 'hover:bg-[#1e293b]');
+                analyzeBtn.innerHTML = '<span>Analyze My Profile</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span>';
+                analyzeBtn.classList.remove('opacity-75', 'cursor-not-allowed');
             }
             
+            // Reset status after 5 seconds
             setTimeout(() => {
-                if (statusIndicator) {
-                    statusIndicator.classList.remove('bg-[#10b981]', 'bg-error');
-                    statusIndicator.classList.add('bg-outline');
+                if (lastAnalysisData) {
+                    updateStatus('Ready to analyze', 'idle');
                 }
-                if (statusText) {
-                    statusText.textContent = "SYSTEM_STATUS: IDLE // AWAITING_PAYLOAD";
-                }
-            }, 4000);
+            }, 5000);
         }
     });
 }
