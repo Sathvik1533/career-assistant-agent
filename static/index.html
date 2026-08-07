@@ -110,8 +110,8 @@ extend: {
 .markdown-body code { font-family: 'Geist', monospace; background-color: #f1f5f9; padding: 2px 4px; border: 1px solid #e2e8f0; font-size: 12px; }
 </style>
 </head>
-<body class="bg-background text-on-surface h-full flex overflow-hidden antialiased selection:bg-primary selection:text-white">
-<nav class="bg-surface-container-low fixed left-0 top-0 h-screen w-[340px] border-r border-outline-variant flex flex-col py-xl z-20">
+<body class="bg-background dark:bg-[#09090b] text-on-surface dark:text-[#f4f4f5] h-full flex overflow-hidden antialiased selection:bg-primary selection:text-white">
+<nav class="bg-surface-container-low dark:bg-[#09090b] fixed left-0 top-0 h-screen w-[340px] border-r border-outline-variant dark:border-[#1e293b] flex flex-col py-xl z-20">
 <div class="px-lg pb-lg mb-lg border-b border-outline-variant flex items-center gap-md">
 <div class="w-10 h-10 bg-primary flex items-center justify-center text-white shrink-0">
 <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">terminal</span>
@@ -130,7 +130,7 @@ extend: {
 <input accept=".pdf,.doc,.docx" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" id="fileUpload" name="resume" type="file" required/>
 <div class="flex flex-col items-center gap-xs" id="uploadUI">
 <span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">upload_file</span>
-<span class="text-label-caps font-label-caps text-outline group-hover:text-primary transition-colors">Drop PDF here</span>
+<span class="text-label-caps font-label-caps text-outline group-hover:text-primary transition-colors">Upload Resume</span>
 </div>
 <div class="hidden flex-col items-center gap-xs" id="successUI">
 <span class="material-symbols-outlined text-[#3b82f6]">check_circle</span>
@@ -153,20 +153,18 @@ extend: {
 </form>
 </div>
 </nav>
-<div class="ml-[340px] flex-1 flex flex-col h-screen overflow-hidden bg-background relative z-10">
-<header class="bg-surface flex justify-between items-center px-gutter w-full docked top-0 h-16 border-b border-outline-variant shrink-0">
+<div class="ml-[340px] flex-1 flex flex-col h-screen overflow-hidden bg-background dark:bg-[#09090b] relative z-10">
+<header class="bg-surface dark:bg-[#09090b] flex justify-between items-center px-gutter w-full docked top-0 h-16 border-b border-outline-variant dark:border-[#1e293b] shrink-0">
 <div class="flex items-center gap-md">
 <span class="text-label-caps font-label-caps text-on-secondary-container tracking-widest uppercase">TELEMETRY: STATUS ACTIVE</span>
 </div>
 <div class="flex items-center gap-sm">
-<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest transition-colors">
-<span class="material-symbols-outlined text-[20px]">notifications_none</span>
+<button id="downloadBtn" class="h-10 px-4 flex items-center justify-center gap-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest transition-colors text-label-caps font-label-caps uppercase tracking-wider border border-outline-variant rounded-sm">
+<span class="material-symbols-outlined text-[16px]">download</span>
+<span>Download Roadmap</span>
 </button>
-<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest transition-colors">
-<span class="material-symbols-outlined text-[20px]">settings</span>
-</button>
-<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest transition-colors">
-<span class="material-symbols-outlined text-[20px]">terminal</span>
+<button id="themeToggle" class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest transition-colors">
+<span class="material-symbols-outlined text-[20px]">dark_mode</span>
 </button>
 </div>
 </header>
