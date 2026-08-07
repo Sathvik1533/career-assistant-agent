@@ -1,17 +1,31 @@
+// 1. Locate the file input and the upload container references
 const uploadBar = document.getElementById('upload-bar');
 const fileInput = document.getElementById('resume');
-const uploadText = document.getElementById('upload-text');
+const uploadText = document.getElementById('upload-text') || (uploadBar ? uploadBar.querySelector('span') : null);
 const telemetryNode = document.getElementById('telemetry-node');
 const telemetryText = document.getElementById('telemetry-text');
 
-// Click logic for custom input bar
-uploadBar.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', () => {
-    if (fileInput.files.length) {
-        uploadText.innerHTML = `<span style="color: #22c55e; font-weight: 500;">✓ ${fileInput.files[0].name}</span>`;
-        uploadBar.style.borderColor = "#22c55e";
-    }
-});
+// 2. Set up the click handler
+if (uploadBar && fileInput) {
+    uploadBar.addEventListener('click', () => fileInput.click());
+}
+
+// 3. Dynamic Text Update Handler (Major UX Improvement)
+if (fileInput) {
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files && fileInput.files.length > 0) {
+            const fileName = fileInput.files[0].name;
+            // Premium muted-success styling (No neon or bright blue slop)
+            if (uploadText) {
+                uploadText.innerHTML = `<span style="color: #f4f4f5; font-weight: 500; font-family: monospace;">✓ ${fileName}</span>`;
+            }
+            if (uploadBar) {
+                uploadBar.style.borderColor = '#52525b';
+                uploadBar.style.backgroundColor = '#141417';
+            }
+        }
+    });
+}
 
 document.getElementById('pipeline-form').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -43,10 +57,15 @@ document.getElementById('pipeline-form').addEventListener('submit', async functi
     formData.append('target_role', document.getElementById('target_role').value);
     formData.append('github_username', document.getElementById('github_username').value);
     
-    // Completely clear file selection values instantly on submit
+    // 4. Completely clear file selection values instantly on submit and reset to baseline
     fileInput.value = '';
-    uploadText.innerHTML = "<strong>Select file</strong> or drop PDF";
-    uploadBar.style.borderColor = "#27272a";
+    if (uploadText) {
+        uploadText.innerHTML = '<strong>Select file</strong> or drop PDF';
+    }
+    if (uploadBar) {
+        uploadBar.style.borderColor = '#27272a';
+        uploadBar.style.backgroundColor = '#09090b';
+    }
     
     try {
         const response = await fetch('/analyze', { method: 'POST', body: formData });
