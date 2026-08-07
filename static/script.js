@@ -1,40 +1,39 @@
-const dropzone = document.getElementById('dropzone');
+const uploadBar = document.getElementById('upload-bar');
 const fileInput = document.getElementById('resume');
-const uploadStatus = document.getElementById('upload-status');
-const statusNode = document.getElementById('status-node');
-const statusString = document.getElementById('status-string');
+const uploadText = document.getElementById('upload-text');
+const telemetryNode = document.getElementById('telemetry-node');
+const telemetryText = document.getElementById('telemetry-text');
 
-// Clean dropzone mechanics
-dropzone.addEventListener('click', () => fileInput.click());
+// Click logic for custom input bar
+uploadBar.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', () => {
     if (fileInput.files.length) {
-        uploadStatus.innerHTML = `<span style="color: #10b981; font-weight: 500;">✓ ${fileInput.files[0].name}</span>`;
-        dropzone.style.borderColor = "#10b981";
+        uploadText.innerHTML = `<span style="color: #22c55e; font-weight: 500;">✓ ${fileInput.files[0].name}</span>`;
+        uploadBar.style.borderColor = "#22c55e";
     }
 });
 
-document.getElementById('engine-form').addEventListener('submit', async function(e) {
+document.getElementById('pipeline-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    // Set active blinking state indicator
-    statusNode.style.backgroundColor = "#f59e0b";
-    statusNode.style.animation = "pulse 1.5s infinite";
-    statusString.innerText = "INITIALIZING CORE DATA SYSTEM GATEWAY...";
+    // Set dynamic system loading telemetry string
+    telemetryNode.style.backgroundColor = "#eab308";
+    telemetryText.innerText = "STATUS: INTENT_GATEWAY_VALIDATION_ACTIVE...";
     
-    const logs = [
-        "VALIDATING INCOMING FILE PAYLOAD VIA PYDANTIC...",
-        "LAUNCHING INTEGRATED LANGCHAIN EXECUTOR CONTEXTS...",
-        "GROQ HARDWARE ACCELERATION CLOUD CONNECTION SECURED...",
-        "INVOKING LOCAL PYTHON GITHUB SCRAPER TOOL MODULE...",
-        "ESTABLISHING AUTHENTICATED HEADERS SECURE CONNECT FOR API.GITHUB.COM...",
-        "SCANNING PUBLIC REPOSITORIES // STRIPPING FORKS // COMPILING TOP 10...",
-        "RUNNING SYSTEM INFERENCE TO SYNTHESIZE COMPLEX EVALUATION..."
+    const statusUpdates = [
+        "STATUS: COMPILING_PYDANTIC_PAYLOAD_BLUEPRINT...",
+        "STATUS: MOUNTING_INTEGRATED_LANGCHAIN_EXECUTOR...",
+        "STATUS: ROUTING_CONTEXT_DATA_TO_GROQ_COMPUTE_GRID...",
+        "STATUS: EXECUTING_LOCAL_GITHUB_PROFILE_SCRAPER...",
+        "STATUS: FETCHING_API_DATA_FROM_LIVE_GITHUB_SERVERS...",
+        "STATUS: CONSOLIDATING_ORIGINAL_REPOS_AND_STRIPPING_FORKS...",
+        "STATUS: COMPILING_FINAL_INFERENCE_REPORT_PAYLOAD..."
     ];
     
     let logIndex = 0;
-    const logTimer = setInterval(() => {
-        if (logIndex < logs.length) {
-            statusString.innerText = `EXECUTION_LOG: ${logs[logIndex]}`;
+    const telemetryInterval = setInterval(() => {
+        if (logIndex < statusUpdates.length) {
+            telemetryText.innerText = statusUpdates[logIndex];
             logIndex++;
         }
     }, 700);
@@ -44,33 +43,33 @@ document.getElementById('engine-form').addEventListener('submit', async function
     formData.append('target_role', document.getElementById('target_role').value);
     formData.append('github_username', document.getElementById('github_username').value);
     
-    // Reset input fields right after collecting data payload
+    // Completely clear file selection values instantly on submit
     fileInput.value = '';
-    uploadStatus.innerHTML = "<strong>Click to select</strong> or drop PDF";
-    dropzone.style.borderColor = "#334155";
+    uploadText.innerHTML = "<strong>Select file</strong> or drop PDF";
+    uploadBar.style.borderColor = "#27272a";
     
     try {
         const response = await fetch('/analyze', { method: 'POST', body: formData });
         const data = await response.json();
         
-        clearInterval(logTimer);
+        clearInterval(telemetryInterval);
         
         if (data.status === 'success') {
-            statusNode.style.backgroundColor = "#10b981";
-            statusNode.style.animation = "none";
-            statusString.innerText = "SYSTEM_STATUS: VERIFIED_SUCCESS // PAYLOAD_COMPILED";
+            telemetryNode.style.backgroundColor = "#22c55e";
+            telemetryText.innerText = "STATUS: PIPELINE_COMPILATION_SUCCESS // DATA_STREAM_MOUNTED";
             
-            document.getElementById('res-job').innerHTML = marked.parse(data.job_search || "Data extraction null.");
-            document.getElementById('res-skills').innerHTML = marked.parse(data.skill_gaps || "Data extraction null.");
-            document.getElementById('res-projects').innerHTML = marked.parse(data.project_ideas || "Data extraction null.");
-            document.getElementById('res-github').innerHTML = marked.parse(data.github_summary || "Data extraction null.");
+            // Populate markdown directly using marked parser rules
+            document.getElementById('res-job').innerHTML = marked.parse(data.job_search || "Data null.");
+            document.getElementById('res-skills').innerHTML = marked.parse(data.skill_gaps || "Data null.");
+            document.getElementById('res-projects').innerHTML = marked.parse(data.project_ideas || "Data null.");
+            document.getElementById('res-github').innerHTML = marked.parse(data.github_summary || "Data null.");
         } else {
-            statusNode.style.backgroundColor = "#ef4444";
-            statusString.innerText = `SYSTEM_ERROR: ${data.error || 'Execution break'}`;
+            telemetryNode.style.backgroundColor = "#ef4444";
+            telemetryText.innerText = `ERROR: ${data.error || 'Execution interrupted'}`;
         }
     } catch (err) {
-        clearInterval(logTimer);
-        statusNode.style.backgroundColor = "#ef4444";
-        statusString.innerText = `NETWORK_PIPELINE_ERROR: ${err.message}`;
+        clearInterval(telemetryInterval);
+        telemetryNode.style.backgroundColor = "#ef4444";
+        telemetryText.innerText = `CRITICAL_NETWORK_FAILURE: ${err.message}`;
     }
 });

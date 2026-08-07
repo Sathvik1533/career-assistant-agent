@@ -6,93 +6,90 @@
     <title>Career Intelligence Engine</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
-        body { background-color: #05050a; color: #f8fafc; display: flex; min-height: 100vh; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+        body { background-color: #09090b; color: #f4f4f5; display: flex; min-height: 100vh; overflow: hidden; }
         
-        /* 2-Column Corporate Grid */
-        .workspace { display: flex; width: 100%; max-width: 1440px; margin: 0 auto; }
+        .workspace { display: flex; width: 100%; height: 100vh; }
         
-        /* Left Configuration Sidebar */
-        .sidebar { width: 340px; border-right: 1px solid #1e293b; background-color: #09090f; padding: 32px 24px; display: flex; flex-direction: column; gap: 24px; }
-        .brand h1 { font-size: 18px; font-weight: 600; color: #ffffff; letter-spacing: -0.5px; }
-        .brand p { font-size: 12px; color: #64748b; margin-top: 4px; }
+        /* Premium Left Configuration Bar */
+        .config-sidebar { width: 360px; min-width: 360px; border-right: 1px solid #1e293b; background-color: #09090b; padding: 40px 24px; display: flex; flex-direction: column; gap: 32px; height: 100%; }
+        .branding h1 { font-size: 16px; font-weight: 600; color: #ffffff; letter-spacing: -0.3px; }
+        .branding p { font-size: 13px; color: #71717a; margin-top: 4px; }
         
-        .form-container { display: flex; flex-direction: column; gap: 20px; }
-        .input-group { display: flex; flex-direction: column; gap: 8px; }
-        .input-group label { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
-        .input-group input[type="text"] { background-color: #030307; border: 1px solid #1e293b; border-radius: 6px; padding: 12px 14px; color: #ffffff; font-size: 13px; outline: none; transition: all 0.2s; }
-        .input-group input[type="text"]:focus { border-color: #4f46e5; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1); }
+        .form-pipeline { display: flex; flex-direction: column; gap: 24px; }
+        .form-row { display: flex; flex-direction: column; gap: 8px; }
+        .form-row label { font-size: 11px; font-weight: 500; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-row input[type="text"] { background-color: #09090b; border: 1px solid #27272a; border-radius: 4px; padding: 12px 14px; color: #ffffff; font-size: 13px; outline: none; transition: border-color 0.15s; }
+        .form-row input[type="text"]:focus { border-color: #52525b; }
         
-        /* Premium File Upload Dropzone */
-        .dropzone-box { border: 1px dashed #334155; border-radius: 6px; padding: 24px 16px; text-align: center; background-color: #030307; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
-        .dropzone-box:hover { border-color: #6366f1; background-color: #07070d; }
-        .dropzone-box span { font-size: 13px; color: #64748b; }
-        .dropzone-box strong { color: #6366f1; font-weight: 500; }
+        /* Clean Custom Uploader Bar */
+        .upload-trigger-bar { background-color: #09090b; border: 1px dashed #27272a; border-radius: 4px; padding: 16px; text-align: center; cursor: pointer; font-size: 13px; color: #71717a; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .upload-trigger-bar:hover { border-color: #52525b; background-color: #141417; }
+        .upload-trigger-bar strong { color: #f4f4f5; font-weight: 500; }
         
-        .submit-btn { background-color: #ffffff; color: #000000; border: none; border-radius: 6px; padding: 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; margin-top: 8px; width: 100%; }
-        .submit-btn:hover { opacity: 0.9; }
+        .action-submit-btn { background-color: #ffffff; color: #09090b; border: none; border-radius: 4px; padding: 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; margin-top: 8px; width: 100%; }
+        .action-submit-btn:hover { opacity: 0.9; }
         
-        /* Right Main Content Stream Workspace */
-        .main-content { flex: 1; padding: 40px; display: flex; flex-direction: column; gap: 32px; overflow-y: auto; }
+        /* Right Content Panel */
+        .output-viewport { flex: 1; padding: 40px; display: flex; flex-direction: column; gap: 24px; height: 100%; overflow-y: auto; background-color: #09090b; }
         
-        /* Minimalist Telemetry Status Header */
-        .telemetry-status-row { display: flex; align-items: center; gap: 12px; background-color: #09090f; border: 1px solid #1e293b; padding: 12px 20px; border-radius: 6px; font-size: 13px; font-family: monospace; color: #94a3b8; }
-        .pulse-node { width: 8px; height: 8px; background-color: #64748b; border-radius: 50%; }
-        @keyframes pulse { 0% { transform: scale(0.9); opacity: 0.6; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.9); opacity: 0.6; } }
+        /* Minimal Single Line Telemetry Row */
+        .telemetry-indicator-bar { display: flex; align-items: center; gap: 12px; font-size: 12px; font-family: monospace; color: #71717a; padding-bottom: 16px; border-bottom: 1px solid #1e293b; }
+        .telemetry-node { width: 6px; height: 6px; background-color: #27272a; border-radius: 50%; }
         
-        /* Clean Dashboard Columns */
-        .dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
-        .pane { background-color: #09090f; border: 1px solid #1e293b; border-radius: 8px; padding: 28px; display: flex; flex-direction: column; gap: 16px; min-height: 280px; }
-        .pane h3 { font-size: 14px; font-weight: 600; color: #ffffff; letter-spacing: -0.2px; text-transform: capitalize; display: flex; align-items: center; gap: 8px; }
-        .pane-body { font-size: 13.5px; color: #94a3b8; line-height: 1.6; }
-        .pane-body ul { margin-left: 16px; margin-top: 6px; }
-        .pane-body li { margin-bottom: 6px; }
-        .pane-body p { margin-bottom: 10px; }
-        .pane-body strong { color: #f1f5f9; }
-        .pane-body pre { background-color: #030307; padding: 12px; border-radius: 4px; overflow-x: auto; margin: 8px 0; font-family: monospace; border: 1px solid #1e293b; color: #cbd5e1; }
+        /* Enterprise Layout Panes */
+        .workspace-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; flex-grow: 1; }
+        .grid-pane { border: 1px solid #1e293b; background-color: #09090b; border-radius: 6px; padding: 24px; display: flex; flex-direction: column; gap: 14px; height: auto; min-height: 240px; }
+        .grid-pane h3 { font-size: 13px; font-weight: 600; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px dashed #1e293b; padding-bottom: 10px; }
+        .grid-pane-body { font-size: 13.5px; color: #a1a1aa; line-height: 1.6; }
+        .grid-pane-body p { margin-bottom: 12px; }
+        .grid-pane-body ul { margin-left: 18px; margin-top: 6px; }
+        .grid-pane-body li { margin-bottom: 6px; }
+        .grid-pane-body strong { color: #ffffff; }
+        .grid-pane-body pre { background-color: #141417; border: 1px solid #27272a; padding: 12px; border-radius: 4px; font-family: monospace; color: #e4e4e7; margin: 8px 0; overflow-x: auto; }
     </style>
 </head>
 <body>
     <div class="workspace">
-        <!-- Sidebar Setup Controls -->
-        <aside class="sidebar">
-            <div class="brand">
-                <h1>Intelligence Engine</h1>
-                <p>Advanced profile mapping pipeline.</p>
+        <!-- Input Sidebar -->
+        <aside class="config-sidebar">
+            <div class="branding">
+                <h1>Career Engine</h1>
+                <p>Telemetry-driven profile alignment pipeline.</p>
             </div>
             
-            <form id="engine-form" class="form-container">
-                <div class="input-group">
-                    <label>Resume Blueprint</label>
-                    <div id="dropzone" class="dropzone-box">
-                        <span id="upload-status"><strong>Click to select</strong> or drop PDF</span>
+            <form id="pipeline-form" class="form-pipeline">
+                <div class="form-row">
+                    <label>Resume Payload</label>
+                    <div id="upload-bar" class="upload-trigger-bar">
+                        <span id="upload-text"><strong>Select file</strong> or drop PDF</span>
                     </div>
                     <input type="file" id="resume" accept=".pdf" style="display: none;" required />
                 </div>
-                <div class="input-group">
+                <div class="form-row">
                     <label>Target Architecture Role</label>
-                    <input type="text" id="target_role" placeholder="e.g. System Engineer" required />
+                    <input type="text" id="target_role" placeholder="e.g. Backend Engineer" required />
                 </div>
-                <div class="input-group">
-                    <label>GitHub Identifier</label>
+                <div class="form-row">
+                    <label>GitHub Username</label>
                     <input type="text" id="github_username" placeholder="e.g. Sathvik1533" required />
                 </div>
-                <button type="submit" class="submit-btn">Execute Pipeline</button>
+                <button type="submit" class="action-submit-btn">Execute Analysis</button>
             </form>
         </aside>
         
-        <!-- Main Real-Time Telemetry Panels -->
-        <main class="main-content">
-            <div class="telemetry-status-row">
-                <div id="status-node" class="pulse-node"></div>
-                <span id="status-string">SYSTEM_STATUS: IDLE // AWAITING_PAYLOAD_TRIGGER</span>
+        <!-- Dynamic Results Screen -->
+        <main class="output-viewport">
+            <div class="telemetry-indicator-bar">
+                <div id="telemetry-node" class="telemetry-node"></div>
+                <span id="telemetry-text">STATUS: ENGINE_IDLE // AWAITING_PIPELINE_TRIGGER</span>
             </div>
             
-            <div class="dashboard-grid">
-                <div class="pane"><h3>💼 Market Matching Alignment</h3><div id="res-job" class="pane-body">System context completely uninitialized. Run deployment trigger.</div></div>
-                <div class="pane"><h3>📉 Architectural Skill Matrix Gaps</h3><div id="res-skills" class="pane-body">System context completely uninitialized. Run deployment trigger.</div></div>
-                <div class="pane"><h3>🛠️ Portfolio Target Blueprints</h3><div id="res-projects" class="pane-body">System context completely uninitialized. Run deployment trigger.</div></div>
-                <div class="pane"><h3>🐙 Public Repository Diagnostics</h3><div id="res-github" class="pane-body">System context completely uninitialized. Run deployment trigger.</div></div>
+            <div class="workspace-grid">
+                <div class="grid-pane"><h3>Market Alignment Strategy</h3><div id="res-job" class="grid-pane-body">Context uninitialized. Execute pipeline function above.</div></div>
+                <div class="grid-pane"><h3>Architectural Skill Matrix Gaps</h3><div id="res-skills" class="grid-pane-body">Context uninitialized. Execute pipeline function above.</div></div>
+                <div class="grid-pane"><h3>Target Portfolio Roadmap</h3><div id="res-projects" class="grid-pane-body">Context uninitialized. Execute pipeline function above.</div></div>
+                <div class="grid-pane"><h3>GitHub Portfolio Diagnostics</h3><div id="res-github" class="grid-pane-body">Context uninitialized. Execute pipeline function above.</div></div>
             </div>
         </main>
     </div>
