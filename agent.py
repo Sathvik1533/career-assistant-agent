@@ -58,11 +58,27 @@ def analyze_career(
         
         print("✅ All tools executed successfully!")
         
-        # Return with exact frontend keys
+        # Stitch all results together into a full report for backward compatibility
+        full_report = f"""# Career Analysis Report
+
+## 1. Job Search Strategy
+{job_result}
+
+## 2. Skill Gap Analysis
+{skill_result}
+
+## 3. Project Ideas
+{project_result}
+
+## 4. GitHub Profile Review
+{github_result}"""
+        
+        # Return with both 'analysis' key (for compatibility) and individual keys
         return {
             "status": "success",
             "target_role": target_role,
             "github_username": github_username,
+            "analysis": full_report,
             "job_search": str(job_result),
             "skill_gaps": str(skill_result),
             "project_ideas": str(project_result),
