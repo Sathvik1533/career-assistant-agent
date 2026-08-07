@@ -165,9 +165,7 @@ async def status_generator(resume_text: str, target_role: str, github_username: 
         
         if result["status"] != "success":
             err_msg = result.get("error")
-            yield f"data: {json.dumps({'status': 'error', 'message': f'❌ Agent error: {err_msg}'})}\
-\
-"
+            yield f"data: {json.dumps({'status': 'error', 'message': f'❌ Agent error: {err_msg}'})}\n\n"
             yield f"data: {json.dumps({'status': 'done', 'error': result.get('error')})}\n\n"
             return
         
@@ -177,13 +175,11 @@ async def status_generator(resume_text: str, target_role: str, github_username: 
         yield f"data: {json.dumps({'status': 'success', 'message': '✓ All 4 tools executed successfully'})}\n\n"
 
 
-"
         await asyncio.sleep(0.3)
         
         yield f"data: {json.dumps({'status': 'info', 'message': '✨ Formatting results...'})}\n\n"
 
 
-"
         await asyncio.sleep(0.3)
         
         # Step 6: Send results
@@ -194,11 +190,11 @@ async def status_generator(resume_text: str, target_role: str, github_username: 
         final_data = {
             "status": "done",
             "data": {
-                "job_search": sections.get("job_search", "No job search data available"),
-                "skill_gaps": sections.get("skill_gaps", "No skill gap data available"),
-                "project_ideas": sections.get("project_ideas", "No project ideas available"),
-                "github_summary": sections.get("github_summary", "No GitHub analysis available"),
-                "full_analysis": analysis_text,
+                "job_search": result.get("job_search", "No job search data available"),
+                "skill_gaps": result.get("skill_gaps", "No skill gap data available"),
+                "project_ideas": result.get("project_ideas", "No project ideas available"),
+                "github_summary": result.get("github_summary", "No GitHub analysis available"),
+                "full_analysis": result.get("analysis", "No analysis available"),
                 "target_role": target_role,
                 "github_username": github_username
             }
