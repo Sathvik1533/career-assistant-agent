@@ -26,7 +26,7 @@ load_dotenv()
 # Initialize FastAPI app
 app = FastAPI(
     title="Career Assistant Agent",
-    version="7.0.0",
+    version="7.1.0",
     description="AI Career Assistant with AgentExecutor, 4 Tools, and Live Status Streaming"
 )
 
@@ -75,7 +75,7 @@ def health():
     
     return {
         "status": "healthy",
-        "version": "7.0.0",
+        "version": "7.1.0",
         "groq_api_key": bool(api_key),
         "github_token": bool(github_token),
         "model": "llama-3.3-70b-versatile",
