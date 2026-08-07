@@ -174,12 +174,14 @@ async def status_generator(resume_text: str, target_role: str, github_username: 
         await asyncio.sleep(0.5)
         
         # Step 5: Results ready (already structured from analyze_career)
-        yield f"data: {json.dumps({'status': 'success', 'message': '✓ All 4 tools executed successfully'})}
+        yield f"data: {json.dumps({'status': 'success', 'message': '✓ All 4 tools executed successfully'})}\n\n"
+
 
 "
         await asyncio.sleep(0.3)
         
-        yield f"data: {json.dumps({'status': 'info', 'message': '✨ Formatting results...'})}
+        yield f"data: {json.dumps({'status': 'info', 'message': '✨ Formatting results...'})}\n\n"
+
 
 "
         await asyncio.sleep(0.3)
